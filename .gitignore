@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env
+venv/
+env/
+
+# Databases
+*.db
+*.db-journal
+
+# Credentials / Secrets
+credentials.json
+service_account.json
+token.json
+callender_api_agent_key.json
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db

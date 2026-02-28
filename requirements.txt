@@ -1,0 +1,11 @@
+langchain 
+langraph 
+langchain_core
+langchain-groq
+langchain_google_community
+python 
+google.oauth
+googleapiclient.discovery
+langchain-daytona
+langchain_aws
+streamlit
