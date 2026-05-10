@@ -1,95 +1,164 @@
-# NexusAI Central Hub — Connecting Tools and Reasoning
+# NexusAI Central Hub
 
-A central AI system designed to coordinate multiple AI agents (Calendar, Mail, Coding, Meeting, Backend, Frontend) and enable reasoning across tools.
+NexusAI Central Hub is a Streamlit-based AI workspace that routes user requests to specialized agents for web search, Gmail tasks, Google Calendar scheduling, Google Meet transcript analysis, and sandboxed Python code execution.
 
-This repository contains modular Python agent scripts that interact with APIs and perform autonomous tasks.
+The main interface is a chat app in `frontend.py`. It connects to the orchestrator in `backend.py`, which uses DeepAgents, LangGraph, LangChain, Groq-hosted models, and tool-specific subagents.
 
-## 🧠 Project Overview
+## Features
 
-This project integrates several intelligent agents to perform tasks such as:
+- Chat-style Streamlit interface with saved conversation threads
+- Main DeepAgent orchestrator with delegated subagents
+- Web search through DuckDuckGo
+- Gmail operations through the LangChain Gmail toolkit
+- Google Calendar event creation through the Calendar API
+- Google Meet transcript listing and reading through Google Drive and Docs APIs
+- Sandboxed Python code execution through Daytona
+- SQLite checkpointing for agent state and conversation history
 
-- Scheduling events (`calender_agent.py`)
-- Sending and handling emails (`mailAgent.py`)
-- Running or coordinating coding activities (`codingAgent.py`)
-- Managing meetings (`meet.py`, `meetAgent.py`)
-- Handling backend and frontend logic (`backend.py`, `frontend.py`)
+## Project Structure
 
-The architecture enables agents to communicate and perform tasks collaboratively, forming a central reasoning hub.
-
-## 📁 Repository Structure
+```text
+.
+|-- backend.py              # Main DeepAgent orchestrator and subagent wiring
+|-- frontend.py             # Streamlit chat UI
+|-- calender_agent.py       # Google Calendar scheduling subagent
+|-- mailAgent.py            # Gmail operations subagent
+|-- meet.py                 # Google Drive/Docs transcript helpers
+|-- meetAgent.py            # Meeting transcript analysis subagent
+|-- codingAgent.py          # Daytona-backed Python execution subagent
+|-- requirements.txt        # Python dependencies
+|-- testing.ipynb           # Notebook for experiments and manual testing
+|-- .env                    # Local environment variables, not committed
+`-- *.json                  # Local Google credential/token files, not committed
 ```
-├── backend.py
-├── calender_agent.py
-├── codingAgent.py
-├── frontend.py
-├── mailAgent.py
-├── meet.py
-├── meetAgent.py
-├── requirements.txt
-├── testing.ipynb
-├── .gitignore
-```
 
-## 🧩 Features
+## Requirements
 
-- Modular agent design
-- Individual script for each functional agent
-- Easily extendable to add more agents
-- Designed for multi-agent reasoning workflows
-- Can be connected with external APIs (Google Calendar, Gmail, etc.)
+- Python 3.11 or newer
+- A Groq API key
+- Daytona credentials/configuration for code execution
+- Google Cloud credentials for Gmail, Calendar, Drive, and Docs access
+- Streamlit for the local UI
 
-## ⚙️ Setup & Installation
+## Setup
 
 1. Clone the repository:
 
-   ```bash
-   git clone https://github.com/PrasannaMadiwar/NexusAI-Central-hub-connecting-tools-and-reasoning.git
-   cd NexusAI-Central-hub-connecting-tools-and-reasoning
-   ```
-2. Create a virtual environment and activate it:
+```bash
+git clone https://github.com/PrasannaMadiwar/NexusAI-Central-hub-connecting-tools-and-reasoning.git
+cd NexusAI-Central-hub-connecting-tools-and-reasoning
 ```
+
+2. Create and activate a virtual environment:
+
+```bash
 python -m venv venv
-# Windows
+```
+
+Windows:
+
+```bash
 venv\Scripts\activate
-# macOS / Linux
+```
+
+macOS/Linux:
+
+```bash
 source venv/bin/activate
 ```
 
 3. Install dependencies:
-```
+
+```bash
 pip install -r requirements.txt
 ```
-## 🛠️ Environment Variables
 
-Create a .env file in the root directory with credentials and API keys required by the agents:
+4. Create a `.env` file in the project root:
+
+```env
+GROQ_API_KEY=your_groq_api_key
+DAYTONA_API_KEY=your_daytona_api_key
 ```
-API_KEY=your_api_key_here
-CALENDAR_CREDENTIALS=path/to/credentials.json
-MAIL_CREDENTIALS=path/to/service_account.json
+
+Add any other environment variables required by your local LangChain, Google, or Daytona configuration.
+
+## Google Credentials
+
+This project expects Google credential files in the repository root:
+
+```text
+callender_api_agent_key.json  # Calendar API service account credentials
+service_account.json          # Drive/Docs service account credentials for transcripts
+credentials.json              # Gmail OAuth client credentials, if used by GmailToolkit
+token.json                    # Gmail OAuth token, generated locally after authorization
 ```
-Important: Keep .env and credentials files out of Git and never commit them.
 
-## 🧪 Testing
+Make sure the Google Cloud project has the required APIs enabled:
 
-You can use testing.ipynb to explore and test agent functionality interactively.
+- Google Calendar API
+- Gmail API
+- Google Drive API
+- Google Docs API
 
-## 📌 Usage
+The credential files and `.env` file contain secrets. They are listed in `.gitignore` and should not be committed.
 
-Each agent script is designed to be run individually or as part of an orchestrator:
+## Running the App
 
+Start the Streamlit UI:
+
+```bash
+streamlit run frontend.py
 ```
+
+Then open the local Streamlit URL shown in the terminal, usually:
+
+```text
+http://localhost:8501
+```
+
+From the chat interface, you can ask NexusAI to:
+
+- Draft, search, summarize, or send Gmail messages
+- Create Google Calendar events
+- List and summarize Google Meet transcripts
+- Search the web
+- Run, debug, or explain Python code in the Daytona sandbox
+
+## Running Individual Modules
+
+Most users should start with the Streamlit app. For debugging, you can also run or import individual modules:
+
+```bash
 python backend.py
+python meet.py
 python mailAgent.py
 python meetAgent.py
 ```
-You can build a coordinator script to run agents in sequence or based on triggers.
 
-## 💡 Examples
+The subagent modules are primarily designed to be imported by `backend.py`, so running them directly may only validate imports and credential setup.
 
-### Example usage in other applications:
+## State and Local Files
 
-Trigger an email reminder using the calendar agent
+The orchestrator stores conversation checkpoints in SQLite files such as:
 
-Automate meeting creation with invite links
+```text
+deepagent_state.db
+deepagent_state.db-shm
+deepagent_state.db-wal
+```
 
-Run coding assistant tasks from the command line
+These are local runtime files and should not be committed.
+
+## Troubleshooting
+
+- If Streamlit fails at import time, confirm all dependencies from `requirements.txt` installed successfully.
+- If Groq calls fail, check `GROQ_API_KEY` in `.env`.
+- If Calendar or transcript tools fail, confirm the expected Google credential JSON files exist in the project root and have access to the target resources.
+- If Gmail tools request authorization, complete the OAuth flow and keep the generated `token.json` local.
+- If code execution fails, verify Daytona is configured and reachable from your environment.
+
+## Security Notes
+
+- Do not commit `.env`, `token.json`, service account files, database files, or logs containing private data.
+- Use least-privilege Google scopes where possible.
+- Review generated emails, calendar events, and code execution requests before allowing agents to perform real-world actions.
