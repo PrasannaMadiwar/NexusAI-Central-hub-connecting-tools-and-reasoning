@@ -34,7 +34,7 @@ class GState(TypedDict):
     
 
 from langchain_groq import ChatGroq 
-llm = ChatGroq(model="openai/gpt-oss-120b")
+llm = ChatGroq(model="openai/gpt-oss-20b")
 model = llm.bind_tools([create_calendar_event])
 
 def chatNode(state:GState):

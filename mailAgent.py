@@ -18,7 +18,7 @@ class GState(TypedDict):
     messages : Annotated[list[BaseMessage], add_messages]
     
 from langchain_groq import ChatGroq 
-llm = ChatGroq(model="openai/gpt-oss-120b")
+llm = ChatGroq(model="openai/gpt-oss-20b")
 model = llm.bind_tools(gtools)
 
 def chatNode(state:GState):

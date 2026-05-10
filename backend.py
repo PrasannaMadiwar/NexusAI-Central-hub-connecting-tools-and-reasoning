@@ -41,7 +41,7 @@ from langgraph.store.memory import InMemoryStore
 from langgraph.checkpoint.sqlite import SqliteSaver
 from deepagents.middleware.memory import MemoryMiddleware
 from langchain.agents.middleware import SummarizationMiddleware
-import sqlite3
+import sqlite3 
 
  
 conn = sqlite3.connect("deepagent_state.db", check_same_thread=False)
@@ -54,7 +54,7 @@ composite_backend = lambda rt: CompositeBackend(
         "/memories/": StoreBackend(rt),
     }
 )
- 
+
 agent = create_deep_agent(
     model=model,
     tools=[internet_search],

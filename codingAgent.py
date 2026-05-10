@@ -6,7 +6,7 @@ from deepagents import create_deep_agent
 from langchain_daytona import DaytonaSandbox
 load_dotenv()
 
-llm = ChatGroq(model="openai/gpt-oss-120b")
+llm = ChatGroq(model="openai/gpt-oss-20b")
 sandbox = Daytona().create()
 backend = DaytonaSandbox(sandbox=sandbox)
 
