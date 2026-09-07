@@ -51,7 +51,11 @@ if WEB_DIR.exists():
 
     @app.get("/", include_in_schema=False)
     async def serve_index():
-        return FileResponse(str(WEB_DIR / "index.html"))
+        response = FileResponse(str(WEB_DIR / "index.html"))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
 
 
 SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")

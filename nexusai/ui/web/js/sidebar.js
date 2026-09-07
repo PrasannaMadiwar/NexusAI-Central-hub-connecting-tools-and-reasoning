@@ -15,8 +15,10 @@ const Sidebar = {
     this.sidebarToggleBtnEl = document.getElementById('sidebarToggleBtn');
     this.threadsListEl = document.getElementById('threadsList');
     this.refreshThreadsBtnEl = document.getElementById('refreshThreadsBtn');
-
     this.bindEvents();
+    if (Storage.getToken()) {
+      this.loadThreads();
+    }
   },
 
   bindEvents() {
@@ -78,18 +80,21 @@ const Sidebar = {
   },
 
   async loadThreads() {
-    if (!this.threadsListEl) return;
+    this.threadsListEl = this.threadsListEl || document.getElementById('threadsList');
+    if (!this.threadsListEl) return [];
     if (!Storage.getToken()) {
       this.threadsListEl.innerHTML = '<div class="threads-empty-state">Sign in to view chats</div>';
-      return;
+      return [];
     }
 
     try {
       const threads = await API.listThreads();
       this.renderThreads(threads);
+      return threads;
     } catch (err) {
       console.warn('Failed to load threads:', err);
       this.threadsListEl.innerHTML = '<div class="threads-empty-state">Unable to load chats</div>';
+      return [];
     }
   },
 

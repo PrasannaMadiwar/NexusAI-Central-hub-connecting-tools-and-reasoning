@@ -29,17 +29,38 @@ const App = {
       console.error('Modal.init error:', e);
     }
 
-    // Always ensure welcome screen is rendered if feed is empty
-    const feed = document.getElementById('messagesInner');
-    if (feed && feed.children.length === 0) {
-      Chat.showWelcome();
-    }
-
     // Async health check (non-blocking)
     this.checkSystemHealth().catch(err => console.warn('Health check warning:', err));
 
     // Ensure user is authenticated (strictly gates system behind login screen)
     await this.checkAuthentication();
+
+    // If authenticated, populate chats list and restore conversation
+    const token = Storage.getToken();
+    if (token) {
+      const threads = await Sidebar.loadThreads();
+      let activeThreadId = Storage.getThreadId();
+      if (!activeThreadId && threads && threads.length > 0) {
+        activeThreadId = threads[0].id;
+        Storage.setThreadId(activeThreadId);
+        Sidebar.updateActiveThreadUI(activeThreadId);
+      }
+
+      if (activeThreadId) {
+        try {
+          const selectedThread = threads ? threads.find(t => t.id === activeThreadId) : null;
+          const title = selectedThread ? selectedThread.title : 'Chat';
+          await Chat.loadThread(activeThreadId, title);
+        } catch (_) {
+          Chat.showWelcome();
+        }
+      } else {
+        const feed = document.getElementById('messagesInner');
+        if (feed && feed.children.length === 0) {
+          Chat.showWelcome();
+        }
+      }
+    }
   },
 
   showAuthScreen() {
@@ -47,10 +68,28 @@ const App = {
     if (this.appLayoutEl) this.appLayoutEl.style.display = 'none';
   },
 
-  showAppLayout() {
+  async showAppLayout() {
     if (this.authScreenEl) this.authScreenEl.style.display = 'none';
     if (this.appLayoutEl) this.appLayoutEl.style.display = 'flex';
-    Sidebar.loadThreads();
+    
+    const threads = await Sidebar.loadThreads();
+    let activeThreadId = Storage.getThreadId();
+    if (!activeThreadId && threads && threads.length > 0) {
+      activeThreadId = threads[0].id;
+      Storage.setThreadId(activeThreadId);
+      Sidebar.updateActiveThreadUI(activeThreadId);
+    }
+
+    if (activeThreadId) {
+      const selectedThread = threads ? threads.find(t => t.id === activeThreadId) : null;
+      const title = selectedThread ? selectedThread.title : 'Chat';
+      Chat.loadThread(activeThreadId, title).catch(() => Chat.showWelcome());
+    } else {
+      const feed = document.getElementById('messagesInner');
+      if (feed && feed.children.length === 0) {
+        Chat.showWelcome();
+      }
+    }
   },
 
   async checkSystemHealth() {
