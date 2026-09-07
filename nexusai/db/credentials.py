@@ -17,9 +17,9 @@ class CredentialsNotFoundError(Exception):
 
 
 # Setup Encryption Key
-ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
+ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY") or os.getenv("ENCRYPTION_MASTER_KEY")
 if not ENCRYPTION_KEY:
-    default_secret = os.getenv("GROQ_API_KEY", "nexusai-default-encryption-secret-key-32b")
+    default_secret = os.getenv("OPENAI_API_KEY") or os.getenv("GROQ_API_KEY", "nexusai-default-encryption-secret-key-32b")
     key_bytes = default_secret.encode()[:32].ljust(32, b"x")
     ENCRYPTION_KEY = base64.urlsafe_b64encode(key_bytes).decode()
 
@@ -34,7 +34,13 @@ class CredentialManager:
     """
 
     def __init__(self, mongo_uri: Optional[str] = None, db_name: Optional[str] = None):
-        self.mongo_uri = mongo_uri or os.getenv("MONGO_URI", "mongodb://localhost:27017")
+        self.mongo_uri = (
+            mongo_uri
+            or os.getenv("MONGODB_ATLAS_URI")
+            or os.getenv("MONGO_URI")
+            or os.getenv("MONGODB_URI")
+            or "mongodb://localhost:27017"
+        )
         self.db_name = db_name or os.getenv("MONGO_DB_NAME", "nexusai")
         self._client = None
         self._db = None
