@@ -6,14 +6,35 @@ const App = {
   async init() {
     console.log('🚀 Initializing NexusAI Workspace UI...');
 
-    Chat.init();
-    Sidebar.init();
-    Modal.init();
+    try {
+      Chat.init();
+    } catch (e) {
+      console.error('Chat.init error:', e);
+    }
 
-    await this.checkSystemHealth();
+    try {
+      Sidebar.init();
+    } catch (e) {
+      console.error('Sidebar.init error:', e);
+    }
+
+    try {
+      Modal.init();
+    } catch (e) {
+      console.error('Modal.init error:', e);
+    }
+
+    // Always ensure welcome screen is rendered if feed is empty
+    const feed = document.getElementById('messagesInner');
+    if (feed && feed.children.length === 0) {
+      Chat.showWelcome();
+    }
+
+    // Async health check (non-blocking)
+    this.checkSystemHealth().catch(err => console.warn('Health check warning:', err));
+
+    // Ensure user is authenticated (auto-provisions demo developer session if fresh visit)
     await this.checkAuthentication();
-
-    Chat.showWelcome();
   },
 
   async checkSystemHealth() {
@@ -32,24 +53,39 @@ const App = {
   },
 
   async checkAuthentication() {
-    const token = Storage.getToken();
+    let token = Storage.getToken();
+
+    // If fresh visit, auto-authenticate seamlessly with demo token
     if (!token) {
-      this.updateUserDisplay();
-      // Prompt user to sign in or create account
-      Modal.openAuthModal();
-      return;
+      try {
+        const res = await API.getDemoToken('developer@nexusai.local');
+        Storage.setToken(res.access_token);
+        Storage.setUser(res.user);
+        this.updateUserDisplay();
+        return;
+      } catch (e) {
+        console.warn('Could not auto-fetch demo token:', e);
+        this.updateUserDisplay();
+        return;
+      }
     }
 
+    // Verify existing token
     try {
       const user = await API.getMe();
       Storage.setUser(user);
       this.updateUserDisplay();
     } catch (err) {
-      console.warn('Session expired or invalid, please sign in.');
-      Storage.setToken('');
-      Storage.setUser(null);
+      console.warn('Session expired or invalid, refreshing demo token...');
+      try {
+        const res = await API.getDemoToken('developer@nexusai.local');
+        Storage.setToken(res.access_token);
+        Storage.setUser(res.user);
+      } catch (_) {
+        Storage.setToken('');
+        Storage.setUser(null);
+      }
       this.updateUserDisplay();
-      Modal.openAuthModal();
     }
   },
 
@@ -59,7 +95,7 @@ const App = {
     Storage.setThreadId(null);
     this.updateUserDisplay();
     Chat.showWelcome();
-    Modal.toast('Signed out successfully.', 'info');
+    Modal.toast('Signed out. Please sign in or use demo login.', 'info');
     Modal.openAuthModal();
   },
 
@@ -73,10 +109,10 @@ const App = {
     const sidebarSignOutBtn = document.getElementById('sidebarSignOutBtn');
 
     if (token && user) {
-      if (nameEl) nameEl.textContent = user.email || 'User';
+      if (nameEl) nameEl.textContent = user.email || 'Developer User';
       if (roleEl) roleEl.textContent = 'OAuth2 Isolated';
       if (avatarEl) {
-        avatarEl.textContent = (user.email || 'U')[0].toUpperCase();
+        avatarEl.textContent = (user.email || 'D')[0].toUpperCase();
       }
       if (headerAuthBtn) {
         headerAuthBtn.textContent = 'Sign Out';

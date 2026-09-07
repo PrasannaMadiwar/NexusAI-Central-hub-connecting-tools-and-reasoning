@@ -11,11 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <!-- CSS Modular Stylesheets -->
-  <link rel="stylesheet" href="/static/css/main.css">
-  <link rel="stylesheet" href="/static/css/sidebar.css">
-  <link rel="stylesheet" href="/static/css/chat.css">
-  <link rel="stylesheet" href="/static/css/modal.css">
+  <!-- CSS Modular Stylesheets with Cache Busting -->
+  <link rel="stylesheet" href="/static/css/main.css?v=3.0">
+  <link rel="stylesheet" href="/static/css/sidebar.css?v=3.0">
+  <link rel="stylesheet" href="/static/css/chat.css?v=3.0">
+  <link rel="stylesheet" href="/static/css/modal.css?v=3.0">
 </head>
 <body>
   <div class="app-layout">
@@ -60,15 +60,15 @@
             <span class="pulsing-dot"></span>
             <span>System</span>
           </span>
-          <span id="systemStatusText" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">Connecting...</span>
+          <span id="systemStatusText" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">Online</span>
         </div>
 
         <!-- User Profile & Sign Out Bar -->
         <div class="user-profile-bar" id="userProfileBar">
-          <div class="user-avatar" id="userAvatar">U</div>
+          <div class="user-avatar" id="userAvatar">D</div>
           <div class="user-info">
-            <span class="user-name" id="userName">Not Signed In</span>
-            <span class="user-role" id="userRole">Guest Session</span>
+            <span class="user-name" id="userName">Developer User</span>
+            <span class="user-role" id="userRole">OAuth2 Isolated</span>
           </div>
           <button class="btn-signout" id="sidebarSignOutBtn" title="Sign Out">
             🚪
@@ -95,7 +95,7 @@
             <span>Credentials</span>
           </button>
           <button class="btn-secondary btn-auth-toggle" id="headerAuthBtn" style="font-size: 0.8rem; padding: 6px 12px;">
-            <span>Sign In</span>
+            <span>Sign Out</span>
           </button>
         </div>
       </header>
@@ -103,7 +103,30 @@
       <!-- Message Feed -->
       <section class="messages-feed" id="messagesFeed">
         <div class="messages-inner" id="messagesInner">
-          <!-- Populated dynamically or shows Gemini welcome hero -->
+          <!-- Static Pre-Rendered Gemini Welcome Hero -->
+          <div class="welcome-hero" id="welcomeHero">
+            <div class="welcome-gradient-text">Hello, Developer</div>
+            <div class="welcome-subtitle">How can NexusAI assist your workflow today?</div>
+            
+            <div class="prompt-suggestions">
+              <div class="suggestion-card" onclick="Chat.applyPrompt('Schedule a 30-min Zoom sync with the product team tomorrow at 3 PM')">
+                <div class="suggestion-title">📅 Schedule Zoom Meeting</div>
+                <div class="suggestion-desc">Create meetings via Zoom OAuth & Google Calendar</div>
+              </div>
+              <div class="suggestion-card" onclick="Chat.applyPrompt('Check my unread Gmail emails and summarize any high priority messages')">
+                <div class="suggestion-title">✉️ Summarize Inbox</div>
+                <div class="suggestion-desc">Inspect recent Gmail messages and drafts</div>
+              </div>
+              <div class="suggestion-card" onclick="Chat.applyPrompt('Write and execute a Python script to calculate Fibonacci sequence and plot timings')">
+                <div class="suggestion-title">⚡ Daytona Sandboxed Code</div>
+                <div class="suggestion-desc">Run Python calculations securely in sandbox</div>
+              </div>
+              <div class="suggestion-card" onclick="Chat.applyPrompt('What tools, credentials, and subagents are currently connected to my workspace?')">
+                <div class="suggestion-title">🔍 Workspace Audit</div>
+                <div class="suggestion-desc">Query MongoDB vault and active subagents</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -324,12 +347,12 @@
   <!-- Toast Alerts Container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- App Scripts (Strictly modular) -->
-  <script src="/static/js/config.js"></script>
-  <script src="/static/js/api.js"></script>
-  <script src="/static/js/modal.js"></script>
-  <script src="/static/js/sidebar.js"></script>
-  <script src="/static/js/chat.js"></script>
-  <script src="/static/js/app.js"></script>
+  <!-- App Scripts (Strictly modular with Cache Busting) -->
+  <script src="/static/js/config.js?v=3.0"></script>
+  <script src="/static/js/api.js?v=3.0"></script>
+  <script src="/static/js/modal.js?v=3.0"></script>
+  <script src="/static/js/sidebar.js?v=3.0"></script>
+  <script src="/static/js/chat.js?v=3.0"></script>
+  <script src="/static/js/app.js?v=3.0"></script>
 </body>
 </html>
