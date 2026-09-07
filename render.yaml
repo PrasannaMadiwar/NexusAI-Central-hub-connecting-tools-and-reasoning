@@ -8,6 +8,8 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     envVars:
+      - key: OPENAI_API_KEY
+        sync: false
       - key: SUPABASE_POSTGRES_URL
         sync: false
       - key: SUPABASE_JWT_SECRET

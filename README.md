@@ -128,11 +128,11 @@ NexusAI is fully pre-configured for one-click or automated deployment on [Render
 2. Log into [Render Dashboard](https://dashboard.render.com/) and click **New** -> **Blueprint**.
 3. Connect your repository. Render will automatically read `render.yaml` and configure the web service with health checks at `/health`.
 4. In the Render Environment Variables tab, provide your secret credentials:
+   - `OPENAI_API_KEY` (Primary LLM key for GPT-4o-mini reasoning)
    - `SUPABASE_POSTGRES_URL`
    - `SUPABASE_JWT_SECRET`
    - `MONGODB_ATLAS_URI`
    - `ENCRYPTION_MASTER_KEY`
-   - `GOOGLE_API_KEY` (or `GROQ_API_KEY`)
 5. Click **Apply**. Render will build the Docker container and deploy it live with HTTPS.
 
 ### Option 2: Manual Web Service
