@@ -339,7 +339,12 @@ def chat_with_nexus(req: ChatRequest, user: User = Depends(get_current_user), db
         }
     except Exception as e:
         error_msg = f"Agent execution error: {str(e)}"
-        return {"thread_id": thread_id, "error": error_msg}
+        print(f"[/api/chat] Error: {error_msg}")
+        ai_msg = Message(thread_id=thread_id, user_id=user.id, role="assistant", content=f"⚠️ {error_msg}")
+        db.add(ai_msg)
+        db.commit()
+        return {"thread_id": thread_id, "response": f"⚠️ {error_msg}"}
+
 
 
 # --- MongoDB Credential Management ---

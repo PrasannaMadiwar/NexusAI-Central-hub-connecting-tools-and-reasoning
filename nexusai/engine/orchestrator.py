@@ -68,11 +68,12 @@ store = InMemoryStore()
 supabase_db_url = os.getenv("SUPABASE_POSTGRES_URL") or os.getenv("DATABASE_URL")
 if supabase_db_url:
     try:
-        # Connect to Supabase Postgres pool
-        pool = ConnectionPool(conninfo=supabase_db_url, max_size=5, kwargs={"autocommit": True})
+        # Connect to Supabase Postgres pool with prepare_threshold=None for PgBouncer/Transaction mode
+        pool = ConnectionPool(conninfo=supabase_db_url, max_size=5, kwargs={"autocommit": True, "prepare_threshold": None})
         checkpointer = PostgresSaver(pool)
         checkpointer.setup()
         print("[orchestrator.py] Connected to Supabase PostgreSQL checkpointer successfully.")
+
     except Exception as e:
         print(f"[orchestrator.py] Warning: Supabase Postgres connection failed ({e}). Falling back to in-memory checkpointer.")
         checkpointer = MemorySaver()

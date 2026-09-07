@@ -192,12 +192,14 @@ const Chat = {
     try {
       const response = await API.sendChat(activeThreadId, text);
       this.hideThinking();
-      this.appendAssistantMessage(response.response, response.tool_calls || []);
+      const content = response.response || response.error || 'Request completed.';
+      this.appendAssistantMessage(content, response.tool_calls || []);
     } catch (err) {
       this.hideThinking();
       this.appendAssistantMessage(`❌ **Error executing request**: ${err.message}\n\n*Please ensure your database pooler and credentials are configured.*`);
       Modal.toast(err.message, 'error');
     }
+
  finally {
       this.sendBtnEl.disabled = false;
       this.inputEl.focus();
