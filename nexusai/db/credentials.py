@@ -5,6 +5,7 @@ import time
 from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
+import certifi
 import pymongo
 from pymongo.collection import Collection
 
@@ -49,7 +50,11 @@ class CredentialManager:
 
     def _connect(self):
         try:
-            self._client = pymongo.MongoClient(self.mongo_uri, serverSelectionTimeoutMS=3000)
+            self._client = pymongo.MongoClient(
+                self.mongo_uri,
+                serverSelectionTimeoutMS=3000,
+                tlsCAFile=certifi.where()
+            )
             self._client.admin.command('ping')
             self._db = self._client[self.db_name]
             self._db.user_credentials.create_index(
