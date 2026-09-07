@@ -12,13 +12,74 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- CSS Modular Stylesheets with Cache Busting -->
-  <link rel="stylesheet" href="/static/css/main.css?v=3.0">
-  <link rel="stylesheet" href="/static/css/sidebar.css?v=3.0">
-  <link rel="stylesheet" href="/static/css/chat.css?v=3.0">
-  <link rel="stylesheet" href="/static/css/modal.css?v=3.0">
+  <link rel="stylesheet" href="/static/css/main.css?v=4.0">
+  <link rel="stylesheet" href="/static/css/sidebar.css?v=4.0">
+  <link rel="stylesheet" href="/static/css/chat.css?v=4.0">
+  <link rel="stylesheet" href="/static/css/modal.css?v=4.0">
 </head>
 <body>
-  <div class="app-layout">
+  <!-- Full-Screen Authentication Gate: System is strictly hidden until user logs in -->
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="auth-brand-logo">N</div>
+        <h1 class="auth-brand-title">NexusAI Workspace</h1>
+        <p class="auth-brand-desc">Autonomous multi-tool reasoning hub with encrypted credentials vault</p>
+      </div>
+
+      <div class="modal-tabs">
+        <button type="button" class="modal-tab-btn active" id="tabSignInBtn">Sign In</button>
+        <button type="button" class="modal-tab-btn" id="tabSignUpBtn">Create Account</button>
+      </div>
+
+      <form id="authForm" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label" for="authEmailInput">Email Address</label>
+          <input 
+            type="email" 
+            id="authEmailInput" 
+            class="form-input" 
+            placeholder="name@company.com" 
+            required
+            autocomplete="email"
+          >
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="authPasswordInput">Password</label>
+          <input 
+            type="password" 
+            id="authPasswordInput" 
+            class="form-input" 
+            placeholder="••••••••" 
+            required
+            minlength="4"
+            autocomplete="current-password"
+          >
+          <span class="form-hint">Only registered accounts with matching database passwords may enter.</span>
+        </div>
+        <button type="submit" class="btn-primary" id="authSubmitBtn" style="width: 100%; justify-content: center; margin-top: 4px;">
+          Sign In
+        </button>
+      </form>
+
+      <div style="display: flex; align-items: center; gap: 10px; margin: 2px 0;">
+        <hr style="flex: 1; border: none; border-top: 1px solid var(--border-subtle);">
+        <span style="font-size: 0.75rem; color: var(--text-muted);">OR</span>
+        <hr style="flex: 1; border: none; border-top: 1px solid var(--border-subtle);">
+      </div>
+
+      <button type="button" class="btn-secondary" id="instantDemoLoginBtn" style="width: 100%; justify-content: center;">
+        👑 Test as Registered Admin (admin@nexusai.com)
+      </button>
+
+      <div class="auth-security-notice">
+        🔒 PBKDF2 Password Hashing • Supabase PostgreSQL • Encrypted MongoDB Vault
+      </div>
+    </div>
+  </div>
+
+  <!-- Main System Layout: Strictly hidden until authentication is verified -->
+  <div class="app-layout" id="appLayout" style="display: none;">
     <!-- Streamlined Gemini Sidebar (No thread clutter) -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
@@ -287,75 +348,15 @@
     </div>
   </div>
 
-  <!-- User Login & Sign Up Modal (NO Bearer Token Displayed) -->
-  <div class="modal-overlay" id="authModal">
-    <div class="modal-card" style="max-width: 440px;">
-      <div class="modal-header">
-        <div class="modal-title">
-          <span>✨</span>
-          <span id="authModalTitle">Sign In to NexusAI</span>
-        </div>
-        <button class="btn-icon" data-close-modal>✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-tabs">
-          <button class="modal-tab-btn active" id="tabSignInBtn">Sign In</button>
-          <button class="modal-tab-btn" id="tabSignUpBtn">Create Account</button>
-        </div>
-
-        <form id="authForm" style="display: flex; flex-direction: column; gap: 14px; margin-top: 8px;">
-          <div class="form-group">
-            <label class="form-label" for="authEmailInput">Email Address</label>
-            <input 
-              type="email" 
-              id="authEmailInput" 
-              class="form-input" 
-              placeholder="you@company.com" 
-              required
-              autocomplete="email"
-            >
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="authPasswordInput">Password</label>
-            <input 
-              type="password" 
-              id="authPasswordInput" 
-              class="form-input" 
-              placeholder="••••••••" 
-              required
-              minlength="4"
-              autocomplete="current-password"
-            >
-            <span class="form-hint">Isolated multi-tenant workspace with encrypted credential storage.</span>
-          </div>
-          <button type="submit" class="btn-primary" id="authSubmitBtn" style="width: 100%; justify-content: center; margin-top: 4px;">
-            Sign In
-          </button>
-        </form>
-
-        <div style="display: flex; align-items: center; gap: 10px; margin: 6px 0;">
-          <hr style="flex: 1; border: none; border-top: 1px solid var(--border-subtle);">
-          <span style="font-size: 0.75rem; color: var(--text-muted);">OR</span>
-          <hr style="flex: 1; border: none; border-top: 1px solid var(--border-subtle);">
-        </div>
-
-        <button type="button" class="btn-secondary" id="instantDemoLoginBtn" style="width: 100%; justify-content: center;">
-          👑 Test as Registered Admin (admin@nexusai.com)
-        </button>
-
-      </div>
-    </div>
-  </div>
-
   <!-- Toast Alerts Container -->
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- App Scripts (Strictly modular with Cache Busting) -->
-  <script src="/static/js/config.js?v=3.0"></script>
-  <script src="/static/js/api.js?v=3.0"></script>
-  <script src="/static/js/modal.js?v=3.0"></script>
-  <script src="/static/js/sidebar.js?v=3.0"></script>
-  <script src="/static/js/chat.js?v=3.0"></script>
-  <script src="/static/js/app.js?v=3.0"></script>
+  <script src="/static/js/config.js?v=4.0"></script>
+  <script src="/static/js/api.js?v=4.0"></script>
+  <script src="/static/js/modal.js?v=4.0"></script>
+  <script src="/static/js/sidebar.js?v=4.0"></script>
+  <script src="/static/js/chat.js?v=4.0"></script>
+  <script src="/static/js/app.js?v=4.0"></script>
 </body>
 </html>

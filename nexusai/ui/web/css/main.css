@@ -1,41 +1,43 @@
 /* ==========================================================================
-   NexusAI Web UI - Main Design System (ChatGPT & Gemini Aesthetic)
+   NexusAI Web UI - Premium Monochrome (Black & White) Design System
+   Designed for maximum user comfort, high legibility, and zero eye fatigue.
    ========================================================================== */
 
 :root {
-  /* Color Palette - Deep Obsidian & Gemini Glow */
-  --bg-primary: #131314;
-  --bg-secondary: #1e1f20;
-  --bg-tertiary: #282a2c;
-  --bg-hover: #333538;
-  --bg-input: #1e1f20;
-  --bg-glass: rgba(30, 31, 32, 0.85);
+  /* Color Palette - Deep Blacks, Subtle Charcoals, Crisp Whites */
+  --bg-primary: #000000;          /* Deepest black for main feed & canvas */
+  --bg-secondary: #0c0c0e;        /* Dark charcoal for sidebar & panels */
+  --bg-tertiary: #161619;         /* Elevated cards & surfaces */
+  --bg-hover: #222226;            /* Subtle dark hover state */
+  --bg-input: #0e0e11;            /* Clean dark input background */
+  --bg-glass: rgba(12, 12, 14, 0.95);
 
-  --text-primary: #e3e3e3;
-  --text-secondary: #9aa0a6;
-  --text-muted: #5f6368;
-  --text-code: #e6edf3;
+  --text-primary: #ffffff;        /* Crisp pure white */
+  --text-secondary: #a1a1aa;      /* Neutral soft silver (high comfort) */
+  --text-muted: #71717a;          /* Neutral dark silver */
+  --text-code: #f4f4f5;
 
-  /* Accent & Gradients */
-  --accent-cyan: #38bdf8;
-  --accent-blue: #60a5fa;
-  --accent-purple: #c084fc;
-  --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
-  --accent-glow: 0 0 24px rgba(56, 189, 248, 0.25);
+  /* Monochromatic Accents (No harsh neon glare) */
+  --accent-primary: #ffffff;
+  --accent-primary-text: #000000;
+  --accent-subtle: #27272a;
+  --accent-hover: #e4e4e7;
+  --accent-glow: 0 0 20px rgba(255, 255, 255, 0.08);
   
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(56, 189, 248, 0.5);
+  --border-subtle: rgba(255, 255, 255, 0.10);
+  --border-medium: rgba(255, 255, 255, 0.22);
+  --border-focus: #ffffff;
 
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #f87171;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 
   /* Dimensions */
-  --sidebar-width: 280px;
+  --sidebar-width: 270px;
   --header-height: 56px;
   --chat-max-width: 820px;
   --radius-sm: 8px;
@@ -61,9 +63,10 @@ html, body {
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.65;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* App Container */
@@ -75,7 +78,7 @@ html, body {
   overflow: hidden;
 }
 
-/* Scrollbars */
+/* Scrollbars - Minimalist Charcoal */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -103,29 +106,37 @@ button {
 }
 
 button:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
+/* Black & White High Contrast Primary Button */
 .btn-primary {
-  background: var(--accent-gradient);
-  color: #ffffff;
+  background: #ffffff;
+  color: #000000;
   padding: 10px 18px;
   font-weight: 600;
   border-radius: var(--radius-md);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.2);
+  border: 1px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.12);
+  transition: all var(--transition-fast);
 }
 .btn-primary:hover:not(:disabled) {
-  opacity: 0.92;
+  background: #e4e4e7;
+  border-color: #e4e4e7;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.35);
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.2);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
 }
 
+/* Minimalist Surface Secondary Button */
 .btn-secondary {
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
   padding: 8px 14px;
@@ -133,10 +144,12 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  transition: all var(--transition-fast);
 }
 .btn-secondary:hover:not(:disabled) {
   background: var(--bg-hover);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--border-medium);
+  color: #ffffff;
 }
 
 .btn-icon {
@@ -153,15 +166,15 @@ button:disabled {
   color: var(--text-primary);
 }
 
-/* Pulse / Animation utilities */
+/* Monochrome Subtle Pulse Indicator */
 @keyframes pulseGlow {
   0%, 100% {
-    opacity: 0.6;
+    opacity: 0.5;
     transform: scale(1);
   }
   50% {
     opacity: 1;
-    transform: scale(1.05);
+    transform: scale(1.1);
   }
 }
 
@@ -169,7 +182,7 @@ button:disabled {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--accent-cyan);
+  background: #22c55e;
   display: inline-block;
-  animation: pulseGlow 1.8s infinite;
+  animation: pulseGlow 2s infinite;
 }

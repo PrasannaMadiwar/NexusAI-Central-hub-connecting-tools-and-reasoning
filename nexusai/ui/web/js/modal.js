@@ -180,7 +180,7 @@ const Modal = {
           Storage.setToken(res.access_token);
           Storage.setUser(res.user);
           App.updateUserDisplay();
-          this.authModalEl.classList.remove('open');
+          App.showAppLayout();
           authForm.reset();
         } catch (err) {
           this.toast(err.message, 'error');
@@ -197,9 +197,8 @@ const Modal = {
           Storage.setToken(res.access_token);
           Storage.setUser(res.user);
           App.updateUserDisplay();
+          App.showAppLayout();
           this.toast(`Signed in as Admin (${res.user.email})`, 'success');
-          this.authModalEl.classList.remove('open');
-
         } catch (err) {
           this.toast(`Admin login error: ${err.message}`, 'error');
         }
@@ -263,7 +262,7 @@ const Modal = {
   },
 
   openAuthModal() {
-    this.authModalEl.classList.add('open');
+    App.showAuthScreen();
     const emailInput = document.getElementById('authEmailInput');
     if (emailInput) emailInput.focus();
   },

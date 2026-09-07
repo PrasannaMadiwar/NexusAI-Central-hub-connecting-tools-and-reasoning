@@ -3,8 +3,13 @@
  */
 
 const App = {
+  authScreenEl: null,
+  appLayoutEl: null,
+
   async init() {
     console.log('🚀 Initializing NexusAI Workspace UI...');
+    this.authScreenEl = document.getElementById('authScreen');
+    this.appLayoutEl = document.getElementById('appLayout');
 
     try {
       Chat.init();
@@ -33,8 +38,18 @@ const App = {
     // Async health check (non-blocking)
     this.checkSystemHealth().catch(err => console.warn('Health check warning:', err));
 
-    // Ensure user is authenticated (auto-provisions demo developer session if fresh visit)
+    // Ensure user is authenticated (strictly gates system behind login screen)
     await this.checkAuthentication();
+  },
+
+  showAuthScreen() {
+    if (this.authScreenEl) this.authScreenEl.style.display = 'flex';
+    if (this.appLayoutEl) this.appLayoutEl.style.display = 'none';
+  },
+
+  showAppLayout() {
+    if (this.authScreenEl) this.authScreenEl.style.display = 'none';
+    if (this.appLayoutEl) this.appLayoutEl.style.display = 'flex';
   },
 
   async checkSystemHealth() {
@@ -55,25 +70,25 @@ const App = {
   async checkAuthentication() {
     let token = Storage.getToken();
 
-    // If no session exists, require the user to sign in
+    // If no session exists, strictly gate the user at the login screen
     if (!token) {
       this.updateUserDisplay();
-      Modal.openAuthModal();
+      this.showAuthScreen();
       return;
     }
 
-
-    // Verify existing token
+    // Verify existing token with backend
     try {
       const user = await API.getMe();
       Storage.setUser(user);
       this.updateUserDisplay();
+      this.showAppLayout();
     } catch (err) {
-      console.warn('Session expired or invalid, prompting login...');
+      console.warn('Session expired or invalid, displaying login gate...');
       Storage.setToken('');
       Storage.setUser(null);
       this.updateUserDisplay();
-      Modal.openAuthModal();
+      this.showAuthScreen();
     }
   },
 
@@ -83,8 +98,8 @@ const App = {
     Storage.setThreadId(null);
     this.updateUserDisplay();
     Chat.showWelcome();
-    Modal.toast('Signed out. Please sign in or use demo login.', 'info');
-    Modal.openAuthModal();
+    this.showAuthScreen();
+    Modal.toast('Signed out successfully.', 'info');
   },
 
   updateUserDisplay() {
