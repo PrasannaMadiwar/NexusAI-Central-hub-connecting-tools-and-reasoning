@@ -83,21 +83,20 @@
 
 /* Streamlined Navigation */
 .sidebar-nav {
-  flex: 1;
-  padding: 12px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 14px;
+  padding: 10px 14px;
   border-radius: var(--radius-md);
   color: var(--text-secondary);
-  font-size: 0.92rem;
+  font-size: 0.90rem;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -117,6 +116,107 @@
 
 .nav-icon {
   font-size: 1.15rem;
+}
+
+/* Recent Chats Section in Sidebar */
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 6px 16px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.threads-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-y: auto;
+  flex: 1;
+  padding: 6px 12px;
+}
+
+.thread-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+.thread-item:hover {
+  background: var(--bg-hover);
+  color: #ffffff;
+}
+
+.thread-item.active {
+  background: #18181c;
+  color: #ffffff;
+  font-weight: 600;
+  border: 1px solid var(--border-medium);
+  border-left: 3px solid #ffffff;
+}
+
+.thread-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.thread-icon {
+  font-size: 0.9rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.thread-title-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.86rem;
+}
+
+.thread-actions {
+  display: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.thread-item:hover .thread-actions {
+  display: flex;
+}
+
+.thread-delete-btn {
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.thread-delete-btn:hover {
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.threads-empty-state {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  padding: 16px 12px;
+  text-align: center;
+  font-style: italic;
 }
 
 /* Sidebar Footer & User Profile */

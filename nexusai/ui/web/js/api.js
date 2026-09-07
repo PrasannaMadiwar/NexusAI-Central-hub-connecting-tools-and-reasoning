@@ -82,6 +82,12 @@ const API = {
     return this.request(`/api/threads/${threadId}/messages`);
   },
 
+  async deleteThread(threadId) {
+    return this.request(`/api/threads/${threadId}`, {
+      method: 'DELETE'
+    });
+  },
+
   // Chat Orchestrator
   async sendChat(threadId, message) {
     return this.request('/api/chat', {

@@ -52,6 +52,12 @@ const Chat = {
 
   showWelcome() {
     this.clearFeed();
+    const activeTitleEl = document.getElementById('activeThreadTitle');
+    if (activeTitleEl) {
+      activeTitleEl.textContent = '';
+      activeTitleEl.style.display = 'none';
+    }
+
     const welcomeHtml = `
       <div class="welcome-hero" id="welcomeHero">
         <div class="welcome-gradient-text">Hello, Developer</div>
@@ -78,6 +84,51 @@ const Chat = {
       </div>
     `;
     this.innerEl.innerHTML = welcomeHtml;
+  },
+
+  async loadThread(threadId, threadTitle = 'Chat') {
+    this.clearFeed();
+    const activeTitleEl = document.getElementById('activeThreadTitle');
+    if (activeTitleEl) {
+      activeTitleEl.textContent = `• ${threadTitle}`;
+      activeTitleEl.style.display = 'inline-block';
+    }
+
+    // Loading history state
+    const loadingRow = document.createElement('div');
+    loadingRow.className = 'message-row assistant';
+    loadingRow.innerHTML = `
+      <div class="message-avatar">✨</div>
+      <div class="message-content">
+        <div class="reasoning-indicator">
+          <div class="thinking-pulse"></div>
+          <span>Loading chat history...</span>
+        </div>
+      </div>
+    `;
+    this.innerEl.appendChild(loadingRow);
+
+    try {
+      const messages = await API.getMessages(threadId);
+      this.clearFeed();
+
+      if (!messages || messages.length === 0) {
+        this.appendAssistantMessage('This chat has no saved messages yet. Send a message to resume!');
+      } else {
+        messages.forEach(m => {
+          if (m.role === 'user') {
+            this.appendUserMessage(m.content);
+          } else {
+            this.appendAssistantMessage(m.content);
+          }
+        });
+      }
+      this.scrollToBottom();
+    } catch (err) {
+      this.clearFeed();
+      this.appendAssistantMessage(`⚠️ Could not load history for this chat: ${err.message}`);
+      Modal.toast(`Failed to load chat: ${err.message}`, 'error');
+    }
   },
 
   applyPrompt(text) {
@@ -169,12 +220,22 @@ const Chat = {
     const text = this.inputEl.value.trim();
     if (!text) return;
 
-    const threadId = Storage.getThreadId();
+    let threadId = Storage.getThreadId();
+    let isNewThread = false;
+
     if (!threadId) {
       // Auto-create thread in the background
       try {
-        const newThread = await API.createThread(text.slice(0, 30));
-        Storage.setThreadId(newThread.id);
+        const title = text.slice(0, 32) + (text.length > 32 ? '...' : '');
+        const newThread = await API.createThread(title);
+        threadId = newThread.id;
+        Storage.setThreadId(threadId);
+        isNewThread = true;
+        const activeTitleEl = document.getElementById('activeThreadTitle');
+        if (activeTitleEl) {
+          activeTitleEl.textContent = `• ${title}`;
+          activeTitleEl.style.display = 'inline-block';
+        }
       } catch (err) {
         Modal.toast(`Failed to initialize session: ${err.message}`, 'error');
         return;
@@ -194,13 +255,15 @@ const Chat = {
       this.hideThinking();
       const content = response.response || response.error || 'Request completed.';
       this.appendAssistantMessage(content, response.tool_calls || []);
+
+      if (isNewThread) {
+        Sidebar.loadThreads();
+      }
     } catch (err) {
       this.hideThinking();
       this.appendAssistantMessage(`❌ **Error executing request**: ${err.message}\n\n*Please ensure your database pooler and credentials are configured.*`);
       Modal.toast(err.message, 'error');
-    }
-
- finally {
+    } finally {
       this.sendBtnEl.disabled = false;
       this.inputEl.focus();
     }

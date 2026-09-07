@@ -318,6 +318,17 @@ def get_thread_messages(thread_id: str, user: User = Depends(get_current_user), 
     ]
 
 
+@app.delete("/api/threads/{thread_id}")
+def delete_thread(thread_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Delete a thread and its messages belonging to the authenticated user."""
+    thread = db.query(Thread).filter(Thread.id == thread_id, Thread.user_id == user.id).first()
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found or access denied.")
+    db.delete(thread)
+    db.commit()
+    return {"status": "deleted", "thread_id": thread_id}
+
+
 # --- Agent Execution ---
 
 @app.post("/api/chat")

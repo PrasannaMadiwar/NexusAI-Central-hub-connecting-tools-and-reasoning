@@ -50,6 +50,7 @@ const App = {
   showAppLayout() {
     if (this.authScreenEl) this.authScreenEl.style.display = 'none';
     if (this.appLayoutEl) this.appLayoutEl.style.display = 'flex';
+    Sidebar.loadThreads();
   },
 
   async checkSystemHealth() {
@@ -99,6 +100,7 @@ const App = {
     this.updateUserDisplay();
     Chat.showWelcome();
     this.showAuthScreen();
+    Sidebar.loadThreads();
     Modal.toast('Signed out successfully.', 'info');
   },
 
