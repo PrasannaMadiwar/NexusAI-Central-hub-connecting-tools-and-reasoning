@@ -17,9 +17,10 @@ from langchain_core.messages import HumanMessage, AIMessage
 from nexusai.db.models import init_db, get_db, User, Thread, Message
 from nexusai.db.credentials import credential_manager, CredentialsNotFoundError
 from nexusai.engine.orchestrator import agent
-from nexusai.api.schemas import ChatRequest, ThreadCreateRequest, ZoomCredentialRequest
+from nexusai.api.schemas import ChatRequest, ThreadCreateRequest, ZoomCredentialRequest, AuthRequest
 
 load_dotenv()
+
 
 # Initialize tables on startup
 init_db()
@@ -131,6 +132,75 @@ def health_check():
     }
 
 
+@app.post("/api/auth/signup")
+def signup(req: AuthRequest, db: Session = Depends(get_db)):
+    """User signup endpoint creating an isolated user profile in Supabase PostgreSQL."""
+    email = req.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+
+    user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, email))
+    user = db.query(User).filter((User.email == email) | (User.id == user_id)).first()
+    if not user:
+        user = User(id=user_id, email=email)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    payload = {
+        "sub": user.id,
+        "email": user.email,
+        "role": "authenticated",
+        "iat": int(datetime.now(timezone.utc).timestamp()),
+        "exp": int(datetime.now(timezone.utc).timestamp()) + 86400 * 30
+    }
+    secret = SUPABASE_JWT_SECRET or "nexusai-demo-secret-key"
+    token = jwt.encode(payload, secret, algorithm="HS256")
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email
+        }
+    }
+
+
+@app.post("/api/auth/login")
+def login(req: AuthRequest, db: Session = Depends(get_db)):
+    """User login endpoint returning an authenticated session token without exposing tokens in UI."""
+    email = req.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+
+    user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, email))
+    user = db.query(User).filter((User.email == email) | (User.id == user_id)).first()
+    if not user:
+        # Create user profile if first time
+        user = User(id=user_id, email=email)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    payload = {
+        "sub": user.id,
+        "email": user.email,
+        "role": "authenticated",
+        "iat": int(datetime.now(timezone.utc).timestamp()),
+        "exp": int(datetime.now(timezone.utc).timestamp()) + 86400 * 30
+    }
+    secret = SUPABASE_JWT_SECRET or "nexusai-demo-secret-key"
+    token = jwt.encode(payload, secret, algorithm="HS256")
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email
+        }
+    }
+
+
 @app.get("/api/auth/demo-token")
 def get_demo_token(email: str = "developer@nexusai.local"):
     """
@@ -156,6 +226,7 @@ def get_demo_token(email: str = "developer@nexusai.local"):
             "email": email
         }
     }
+
 
 
 

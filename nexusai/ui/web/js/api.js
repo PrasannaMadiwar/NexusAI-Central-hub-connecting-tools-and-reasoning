@@ -41,10 +41,25 @@ const API = {
     return this.request('/health');
   },
 
-  // Auth / Demo Token
+  // Auth (Email & Password Login / Signup)
+  async login(email, password = '') {
+    return this.request('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+  },
+
+  async signup(email, password = '') {
+    return this.request('/api/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+  },
+
   async getDemoToken(email = 'developer@nexusai.local') {
     return this.request(`/api/auth/demo-token?email=${encodeURIComponent(email)}`);
   },
+
 
   // User Profile
   async getMe() {

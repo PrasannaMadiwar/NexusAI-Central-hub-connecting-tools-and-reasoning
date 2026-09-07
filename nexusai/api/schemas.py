@@ -15,3 +15,9 @@ class ZoomCredentialRequest(BaseModel):
     account_id: str
     client_id: str
     client_secret: str
+
+
+class AuthRequest(BaseModel):
+    email: str
+    password: Optional[str] = None
+

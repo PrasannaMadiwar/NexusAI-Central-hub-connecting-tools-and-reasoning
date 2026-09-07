@@ -171,13 +171,12 @@ const Chat = {
 
     const threadId = Storage.getThreadId();
     if (!threadId) {
-      // Auto-create thread if none selected
+      // Auto-create thread in the background
       try {
         const newThread = await API.createThread(text.slice(0, 30));
         Storage.setThreadId(newThread.id);
-        Sidebar.renderThreads();
       } catch (err) {
-        Modal.toast(`Failed to create thread: ${err.message}`, 'error');
+        Modal.toast(`Failed to initialize session: ${err.message}`, 'error');
         return;
       }
     }
@@ -194,12 +193,12 @@ const Chat = {
       const response = await API.sendChat(activeThreadId, text);
       this.hideThinking();
       this.appendAssistantMessage(response.response, response.tool_calls || []);
-      Sidebar.updateCurrentThreadTitle(text.slice(0, 30));
     } catch (err) {
       this.hideThinking();
       this.appendAssistantMessage(`❌ **Error executing request**: ${err.message}\n\n*Please ensure your database pooler and credentials are configured.*`);
       Modal.toast(err.message, 'error');
-    } finally {
+    }
+ finally {
       this.sendBtnEl.disabled = false;
       this.inputEl.focus();
     }

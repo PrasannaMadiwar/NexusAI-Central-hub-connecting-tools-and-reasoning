@@ -1,15 +1,18 @@
 /**
- * NexusAI Web UI - Modals (Credentials Vault & User Switcher) & Toasts
+ * NexusAI Web UI - Modals (Credentials Vault, Auth / Login / Signup, Agents) & Toasts
  */
 
 const Modal = {
   vaultModalEl: null,
   authModalEl: null,
+  agentsModalEl: null,
   toastContainerEl: null,
+  authMode: 'signin', // 'signin' | 'signup'
 
   init() {
     this.vaultModalEl = document.getElementById('vaultModal');
     this.authModalEl = document.getElementById('authModal');
+    this.agentsModalEl = document.getElementById('agentsModal');
     this.toastContainerEl = document.getElementById('toastContainer');
 
     this.bindEvents();
@@ -21,11 +24,41 @@ const Modal = {
     if (openVaultBtn) {
       openVaultBtn.addEventListener('click', () => this.openVaultModal());
     }
+    const headerVaultBtn = document.getElementById('headerVaultBtn');
+    if (headerVaultBtn) {
+      headerVaultBtn.addEventListener('click', () => this.openVaultModal());
+    }
+    const navVaultBtn = document.getElementById('navVaultBtn');
+    if (navVaultBtn) {
+      navVaultBtn.addEventListener('click', () => this.openVaultModal());
+    }
 
-    // Open Auth Modal
-    const userProfileBar = document.getElementById('userProfileBar');
-    if (userProfileBar) {
-      userProfileBar.addEventListener('click', () => this.openAuthModal());
+    // Open Agents Modal
+    const navAgentsBtn = document.getElementById('navAgentsBtn');
+    if (navAgentsBtn) {
+      navAgentsBtn.addEventListener('click', () => {
+        if (this.agentsModalEl) this.agentsModalEl.classList.add('open');
+      });
+    }
+
+    // Open Auth Modal via Header or Profile
+    const headerAuthBtn = document.getElementById('headerAuthBtn');
+    if (headerAuthBtn) {
+      headerAuthBtn.addEventListener('click', () => {
+        if (Storage.getToken()) {
+          App.signOut();
+        } else {
+          this.openAuthModal();
+        }
+      });
+    }
+
+    const sidebarSignOutBtn = document.getElementById('sidebarSignOutBtn');
+    if (sidebarSignOutBtn) {
+      sidebarSignOutBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        App.signOut();
+      });
     }
 
     // Close buttons
@@ -45,20 +78,42 @@ const Modal = {
       });
     });
 
-    // Modal tabs switching
-    document.querySelectorAll('.modal-tab-btn').forEach(tabBtn => {
+    // Credentials Modal tabs switching
+    this.vaultModalEl.querySelectorAll('.modal-tab-btn').forEach(tabBtn => {
       tabBtn.addEventListener('click', () => {
         const targetTab = tabBtn.dataset.tab;
-        const parentModal = tabBtn.closest('.modal-card');
-
-        parentModal.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
-        parentModal.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+        this.vaultModalEl.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
+        this.vaultModalEl.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
 
         tabBtn.classList.add('active');
-        const activePane = parentModal.querySelector(`.tab-pane[data-pane="${targetTab}"]`);
+        const activePane = this.vaultModalEl.querySelector(`.tab-pane[data-pane="${targetTab}"]`);
         if (activePane) activePane.style.display = 'flex';
       });
     });
+
+    // Auth Modal tab switching (Sign In vs Create Account)
+    const tabSignInBtn = document.getElementById('tabSignInBtn');
+    const tabSignUpBtn = document.getElementById('tabSignUpBtn');
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+    const authModalTitle = document.getElementById('authModalTitle');
+
+    if (tabSignInBtn && tabSignUpBtn) {
+      tabSignInBtn.addEventListener('click', () => {
+        this.authMode = 'signin';
+        tabSignInBtn.classList.add('active');
+        tabSignUpBtn.classList.remove('active');
+        if (authSubmitBtn) authSubmitBtn.textContent = 'Sign In';
+        if (authModalTitle) authModalTitle.textContent = 'Sign In to NexusAI';
+      });
+
+      tabSignUpBtn.addEventListener('click', () => {
+        this.authMode = 'signup';
+        tabSignUpBtn.classList.add('active');
+        tabSignInBtn.classList.remove('active');
+        if (authSubmitBtn) authSubmitBtn.textContent = 'Create Account';
+        if (authModalTitle) authModalTitle.textContent = 'Create NexusAI Account';
+      });
+    }
 
     // Zoom Form Submit
     const zoomForm = document.getElementById('zoomForm');
@@ -103,42 +158,49 @@ const Modal = {
       });
     }
 
-    // Auth Form Submit (custom token)
+    // Auth Form Submit (Email & Password Login / Signup)
     const authForm = document.getElementById('authForm');
     if (authForm) {
       authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const token = document.getElementById('jwtTokenInput').value.trim();
-        if (!token) return;
+        const email = document.getElementById('authEmailInput').value.trim();
+        const password = document.getElementById('authPasswordInput').value;
+        if (!email) return;
 
-        Storage.setToken(token);
         try {
-          const user = await API.getMe();
-          Storage.setUser(user);
+          let res;
+          if (this.authMode === 'signup') {
+            res = await API.signup(email, password);
+            this.toast(`Account created for ${res.user.email}!`, 'success');
+          } else {
+            res = await API.login(email, password);
+            this.toast(`Signed in as ${res.user.email}!`, 'success');
+          }
+
+          Storage.setToken(res.access_token);
+          Storage.setUser(res.user);
           App.updateUserDisplay();
-          this.toast(`Authenticated as ${user.email}`, 'success');
           this.authModalEl.classList.remove('open');
-          Sidebar.renderThreads();
+          authForm.reset();
         } catch (err) {
-          this.toast(`Invalid token: ${err.message}`, 'error');
+          this.toast(err.message, 'error');
         }
       });
     }
 
-    // Load Demo User Button
-    const loadDemoUserBtn = document.getElementById('loadDemoUserBtn');
-    if (loadDemoUserBtn) {
-      loadDemoUserBtn.addEventListener('click', async () => {
+    // Instant 1-Click Demo Login
+    const instantDemoLoginBtn = document.getElementById('instantDemoLoginBtn');
+    if (instantDemoLoginBtn) {
+      instantDemoLoginBtn.addEventListener('click', async () => {
         try {
           const res = await API.getDemoToken('developer@nexusai.local');
           Storage.setToken(res.access_token);
           Storage.setUser(res.user);
           App.updateUserDisplay();
-          this.toast(`Demo user authenticated (${res.user.email})`, 'success');
+          this.toast(`Signed in as demo developer (${res.user.email})`, 'success');
           this.authModalEl.classList.remove('open');
-          Sidebar.renderThreads();
         } catch (err) {
-          this.toast(`Error fetching demo token: ${err.message}`, 'error');
+          this.toast(`Demo login error: ${err.message}`, 'error');
         }
       });
     }
@@ -200,10 +262,8 @@ const Modal = {
 
   openAuthModal() {
     this.authModalEl.classList.add('open');
-    const tokenInput = document.getElementById('jwtTokenInput');
-    if (tokenInput) {
-      tokenInput.value = Storage.getToken();
-    }
+    const emailInput = document.getElementById('authEmailInput');
+    if (emailInput) emailInput.focus();
   },
 
   toast(message, type = 'info') {

@@ -19,7 +19,7 @@
 </head>
 <body>
   <div class="app-layout">
-    <!-- Collapsible Sidebar -->
+    <!-- Streamlined Gemini Sidebar (No thread clutter) -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <a href="#" class="brand-logo">
@@ -34,16 +34,25 @@
       <div class="sidebar-action-bar">
         <button class="new-chat-btn" id="newChatBtn">
           <span>＋</span>
-          <span>New chat</span>
+          <span>New Session</span>
         </button>
       </div>
 
-      <div class="threads-section">
-        <div class="threads-label">Recent Conversations</div>
-        <ul class="thread-list" id="threadList">
-          <!-- Populated dynamically by sidebar.js -->
-        </ul>
-      </div>
+      <!-- Essential Navigation Items -->
+      <nav class="sidebar-nav">
+        <div class="nav-item active" id="navWorkspaceBtn">
+          <span class="nav-icon">✨</span>
+          <span class="nav-text">Reasoning Workspace</span>
+        </div>
+        <div class="nav-item" id="navVaultBtn">
+          <span class="nav-icon">🔐</span>
+          <span class="nav-text">Credentials Vault</span>
+        </div>
+        <div class="nav-item" id="navAgentsBtn">
+          <span class="nav-icon">⚡</span>
+          <span class="nav-text">Specialist Subagents</span>
+        </div>
+      </nav>
 
       <div class="sidebar-footer">
         <div class="system-status-indicator">
@@ -51,24 +60,19 @@
             <span class="pulsing-dot"></span>
             <span>System</span>
           </span>
-          <span id="systemStatusText" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">Connecting...</span>
+          <span id="systemStatusText" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">Connecting...</span>
         </div>
 
-        <button class="vault-btn" id="openVaultBtn">
-          <span style="display: flex; align-items: center; gap: 8px;">
-            <span>🔐</span>
-            <span>Credentials Vault</span>
-          </span>
-          <span style="font-size: 0.75rem; color: var(--accent-cyan);">Configure</span>
-        </button>
-
-        <div class="user-profile-bar" id="userProfileBar" title="Click to manage user/auth token">
-          <div class="user-avatar" id="userAvatar">D</div>
+        <!-- User Profile & Sign Out Bar -->
+        <div class="user-profile-bar" id="userProfileBar">
+          <div class="user-avatar" id="userAvatar">U</div>
           <div class="user-info">
-            <span class="user-name" id="userName">Developer User</span>
-            <span class="user-role">OAuth2 Isolated Session</span>
+            <span class="user-name" id="userName">Not Signed In</span>
+            <span class="user-role" id="userRole">Guest Session</span>
           </div>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">⚙️</span>
+          <button class="btn-signout" id="sidebarSignOutBtn" title="Sign Out">
+            🚪
+          </button>
         </div>
       </div>
     </aside>
@@ -85,7 +89,15 @@
             <span>NexusAI Orchestrator</span>
           </div>
         </div>
-        <div class="thread-current-title" id="currentThreadTitle">New Conversation</div>
+        <div class="header-right" style="display: flex; align-items: center; gap: 10px;">
+          <button class="btn-secondary" id="headerVaultBtn" style="font-size: 0.8rem; padding: 6px 12px;">
+            <span>🔐</span>
+            <span>Credentials</span>
+          </button>
+          <button class="btn-secondary btn-auth-toggle" id="headerAuthBtn" style="font-size: 0.8rem; padding: 6px 12px;">
+            <span>Sign In</span>
+          </button>
+        </div>
       </header>
 
       <!-- Message Feed -->
@@ -102,7 +114,7 @@
             id="chatInput"
             class="input-textarea"
             rows="1"
-            placeholder="Ask NexusAI to schedule meetings, read emails, write and test code..."
+            placeholder="Ask NexusAI to schedule meetings, read emails, execute code in sandbox..."
           ></textarea>
           <div class="input-controls">
             <div class="input-tools-hints">
@@ -192,35 +204,119 @@
     </div>
   </div>
 
-  <!-- User & Auth Token Modal -->
-  <div class="modal-overlay" id="authModal">
+  <!-- Specialist Agents Modal -->
+  <div class="modal-overlay" id="agentsModal">
     <div class="modal-card">
       <div class="modal-header">
         <div class="modal-title">
-          <span>👤</span>
-          <span>User Authentication & Multi-Tenancy</span>
+          <span>⚡</span>
+          <span>Connected Specialist Subagents</span>
         </div>
         <button class="btn-icon" data-close-modal>✕</button>
       </div>
       <div class="modal-body">
-        <p style="font-size: 0.85rem; color: var(--text-secondary);">
-          Every session requires a verified OAuth2 / Supabase JWT. Your threads, checkpoints, and credentials are completely isolated.
-        </p>
-
-        <form id="authForm" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="form-group">
-            <label class="form-label" for="jwtTokenInput">Bearer JWT Token</label>
-            <textarea id="jwtTokenInput" class="form-input" rows="4" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
-            <span class="form-hint">Paste your Supabase JWT or click below to generate an authenticated demo session.</span>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="credential-card">
+            <div class="cred-info">
+              <span style="font-size: 1.4rem;">✉️</span>
+              <div>
+                <div style="font-weight: 600;">Gmail Specialist</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Searches inbox, summarizes messages, drafts replies</div>
+              </div>
+            </div>
+            <span class="cred-badge connected">Active</span>
           </div>
-          <div style="display: flex; gap: 10px;">
-            <button type="submit" class="btn-primary" style="flex: 1;">Apply Token</button>
-            <button type="button" class="btn-secondary" id="loadDemoUserBtn" style="flex: 1;">Generate Demo Token</button>
+          <div class="credential-card">
+            <div class="cred-info">
+              <span style="font-size: 1.4rem;">📅</span>
+              <div>
+                <div style="font-weight: 600;">Google Calendar Specialist</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Schedules meetings, fetches availability, creates events</div>
+              </div>
+            </div>
+            <span class="cred-badge connected">Active</span>
           </div>
-        </form>
+          <div class="credential-card">
+            <div class="cred-info">
+              <span style="font-size: 1.4rem;">📹</span>
+              <div>
+                <div style="font-weight: 600;">Meet & Zoom Analyzer</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Inspects transcripts, retrieves summaries, generates action items</div>
+              </div>
+            </div>
+            <span class="cred-badge connected">Active</span>
+          </div>
+          <div class="credential-card">
+            <div class="cred-info">
+              <span style="font-size: 1.4rem;">⚡</span>
+              <div>
+                <div style="font-weight: 600;">Daytona Code Sandbox</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Executes Python code and data calculations securely</div>
+              </div>
+            </div>
+            <span class="cred-badge connected">Active</span>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" data-close-modal>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Login & Sign Up Modal (NO Bearer Token Displayed) -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>✨</span>
+          <span id="authModalTitle">Sign In to NexusAI</span>
+        </div>
+        <button class="btn-icon" data-close-modal>✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-tabs">
+          <button class="modal-tab-btn active" id="tabSignInBtn">Sign In</button>
+          <button class="modal-tab-btn" id="tabSignUpBtn">Create Account</button>
+        </div>
+
+        <form id="authForm" style="display: flex; flex-direction: column; gap: 14px; margin-top: 8px;">
+          <div class="form-group">
+            <label class="form-label" for="authEmailInput">Email Address</label>
+            <input 
+              type="email" 
+              id="authEmailInput" 
+              class="form-input" 
+              placeholder="you@company.com" 
+              required
+              autocomplete="email"
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="authPasswordInput">Password</label>
+            <input 
+              type="password" 
+              id="authPasswordInput" 
+              class="form-input" 
+              placeholder="••••••••" 
+              autocomplete="current-password"
+            >
+            <span class="form-hint">Isolated multi-tenant workspace with encrypted credential storage.</span>
+          </div>
+          <button type="submit" class="btn-primary" id="authSubmitBtn" style="width: 100%; justify-content: center; margin-top: 4px;">
+            Sign In
+          </button>
+        </form>
+
+        <div style="display: flex; align-items: center; gap: 10px; margin: 6px 0;">
+          <hr style="flex: 1; border: none; border-top: 1px solid var(--border-subtle);">
+          <span style="font-size: 0.75rem; color: var(--text-muted);">OR</span>
+          <hr style="flex: 1; border: none; border-top: 1px solid var(--border-subtle);">
+        </div>
+
+        <button type="button" class="btn-secondary" id="instantDemoLoginBtn" style="width: 100%; justify-content: center;">
+          🚀 Instant Demo Login (1-Click)
+        </button>
       </div>
     </div>
   </div>

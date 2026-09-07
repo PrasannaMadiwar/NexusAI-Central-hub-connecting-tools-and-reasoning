@@ -1,25 +1,19 @@
 /**
- * NexusAI Web UI - Main App Bootloader
+ * NexusAI Web UI - Main App Bootloader & Auth Orchestrator
  */
 
 const App = {
   async init() {
-    console.log('🚀 Initializing NexusAI ChatGPT / Gemini UI...');
+    console.log('🚀 Initializing NexusAI Workspace UI...');
 
     Chat.init();
     Sidebar.init();
     Modal.init();
 
     await this.checkSystemHealth();
-    await this.ensureAuthentication();
-    await Sidebar.renderThreads();
+    await this.checkAuthentication();
 
-    const currentThreadId = Storage.getThreadId();
-    if (currentThreadId) {
-      await Sidebar.selectThread(currentThreadId);
-    } else {
-      Chat.showWelcome();
-    }
+    Chat.showWelcome();
   },
 
   async checkSystemHealth() {
@@ -37,44 +31,70 @@ const App = {
     }
   },
 
-  async ensureAuthentication() {
-    let token = Storage.getToken();
+  async checkAuthentication() {
+    const token = Storage.getToken();
     if (!token) {
-      try {
-        // Automatically request a developer demo token from the backend
-        const authData = await API.getDemoToken('developer@nexusai.local');
-        Storage.setToken(authData.access_token);
-        Storage.setUser(authData.user);
-      } catch (err) {
-        console.warn('Could not auto-fetch demo token:', err);
-      }
-    } else {
-      try {
-        const user = await API.getMe();
-        Storage.setUser(user);
-      } catch (err) {
-        console.warn('Saved token expired or invalid, refreshing demo token...');
-        try {
-          const authData = await API.getDemoToken('developer@nexusai.local');
-          Storage.setToken(authData.access_token);
-          Storage.setUser(authData.user);
-        } catch (_) {}
-      }
+      this.updateUserDisplay();
+      // Prompt user to sign in or create account
+      Modal.openAuthModal();
+      return;
     }
 
+    try {
+      const user = await API.getMe();
+      Storage.setUser(user);
+      this.updateUserDisplay();
+    } catch (err) {
+      console.warn('Session expired or invalid, please sign in.');
+      Storage.setToken('');
+      Storage.setUser(null);
+      this.updateUserDisplay();
+      Modal.openAuthModal();
+    }
+  },
+
+  signOut() {
+    Storage.setToken('');
+    Storage.setUser(null);
+    Storage.setThreadId(null);
     this.updateUserDisplay();
+    Chat.showWelcome();
+    Modal.toast('Signed out successfully.', 'info');
+    Modal.openAuthModal();
   },
 
   updateUserDisplay() {
     const user = Storage.getUser();
+    const token = Storage.getToken();
     const nameEl = document.getElementById('userName');
+    const roleEl = document.getElementById('userRole');
     const avatarEl = document.getElementById('userAvatar');
+    const headerAuthBtn = document.getElementById('headerAuthBtn');
+    const sidebarSignOutBtn = document.getElementById('sidebarSignOutBtn');
 
-    if (user) {
-      if (nameEl) nameEl.textContent = user.email || 'Developer User';
+    if (token && user) {
+      if (nameEl) nameEl.textContent = user.email || 'User';
+      if (roleEl) roleEl.textContent = 'OAuth2 Isolated';
       if (avatarEl) {
-        const initial = (user.email || 'D')[0].toUpperCase();
-        avatarEl.textContent = initial;
+        avatarEl.textContent = (user.email || 'U')[0].toUpperCase();
+      }
+      if (headerAuthBtn) {
+        headerAuthBtn.textContent = 'Sign Out';
+        headerAuthBtn.style.display = 'inline-flex';
+      }
+      if (sidebarSignOutBtn) {
+        sidebarSignOutBtn.style.display = 'inline-flex';
+      }
+    } else {
+      if (nameEl) nameEl.textContent = 'Not Signed In';
+      if (roleEl) roleEl.textContent = 'Guest Session';
+      if (avatarEl) avatarEl.textContent = '?';
+      if (headerAuthBtn) {
+        headerAuthBtn.textContent = 'Sign In';
+        headerAuthBtn.style.display = 'inline-flex';
+      }
+      if (sidebarSignOutBtn) {
+        sidebarSignOutBtn.style.display = 'none';
       }
     }
   }
