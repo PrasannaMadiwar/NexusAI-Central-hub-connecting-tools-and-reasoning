@@ -16,10 +16,12 @@ from langchain_core.messages import HumanMessage, AIMessage
 
 from nexusai.db.models import init_db, get_db, User, Thread, Message
 from nexusai.db.credentials import credential_manager, CredentialsNotFoundError
+from nexusai.db.auth import hash_password, verify_password
 from nexusai.engine.orchestrator import agent
 from nexusai.api.schemas import ChatRequest, ThreadCreateRequest, ZoomCredentialRequest, AuthRequest
 
 load_dotenv()
+
 
 
 # Initialize tables on startup
@@ -134,18 +136,24 @@ def health_check():
 
 @app.post("/api/auth/signup")
 def signup(req: AuthRequest, db: Session = Depends(get_db)):
-    """User signup endpoint creating an isolated user profile in Supabase PostgreSQL."""
+    """User signup endpoint creating an isolated user profile in Supabase PostgreSQL with hashed password."""
     email = req.email.strip().lower()
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Please enter a valid email address.")
 
+    password = (req.password or "").strip()
+    if not password or len(password) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters long.")
+
+    user = db.query(User).filter(User.email == email).first()
+    if user:
+        raise HTTPException(status_code=400, detail="An account with this email already exists. Please sign in.")
+
     user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, email))
-    user = db.query(User).filter((User.email == email) | (User.id == user_id)).first()
-    if not user:
-        user = User(id=user_id, email=email)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    user = User(id=user_id, email=email, password_hash=hash_password(password))
+    db.add(user)
+    db.commit()
+    db.refresh(user)
 
     payload = {
         "sub": user.id,
@@ -169,12 +177,17 @@ def signup(req: AuthRequest, db: Session = Depends(get_db)):
 @app.post("/api/auth/login")
 def login(req: AuthRequest, db: Session = Depends(get_db)):
     """
-    User login endpoint strictly requiring the user to be registered in the database.
-    Rejects unregistered users with 401 Unauthorized.
+    User login endpoint strictly requiring:
+    1. User must be pre-registered in the database.
+    2. Correct password must be provided and match stored hash.
     """
     email = req.email.strip().lower()
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+
+    password = (req.password or "").strip()
+    if not password:
+        raise HTTPException(status_code=400, detail="Password is required to sign in.")
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
@@ -185,6 +198,19 @@ def login(req: AuthRequest, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Access denied: User not registered in the database. Please create an account first."
+        )
+
+    # Strictly verify password against stored database hash
+    if not user.password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access denied: No password configured for this account. Please sign up or contact administrator."
+        )
+
+    if not verify_password(password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access denied: Incorrect password. Please check your password and try again."
         )
 
     payload = {
@@ -204,6 +230,7 @@ def login(req: AuthRequest, db: Session = Depends(get_db)):
             "email": user.email
         }
     }
+
 
 
 

@@ -31,6 +31,7 @@ class User(Base):
 
     id = Column(String(128), primary_key=True, index=True)  # OAuth2 'sub' / Supabase UUID
     email = Column(String(255), nullable=True, index=True)
+    password_hash = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     threads = relationship("Thread", back_populates="user", cascade="all, delete-orphan")
@@ -64,8 +65,16 @@ class Message(Base):
 
 
 def init_db():
-    """Create tables in database if they don't exist."""
+    """Create tables in database if they don't exist and run light migrations."""
     Base.metadata.create_all(bind=engine)
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE nexus_users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);"))
+            conn.commit()
+    except Exception:
+        pass
+
 
 
 def get_db():

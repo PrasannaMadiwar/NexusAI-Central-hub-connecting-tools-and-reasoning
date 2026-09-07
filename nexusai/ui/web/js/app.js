@@ -69,16 +69,11 @@ const App = {
       Storage.setUser(user);
       this.updateUserDisplay();
     } catch (err) {
-      console.warn('Session expired or invalid, refreshing demo token...');
-      try {
-        const res = await API.getDemoToken('developer@nexusai.local');
-        Storage.setToken(res.access_token);
-        Storage.setUser(res.user);
-      } catch (_) {
-        Storage.setToken('');
-        Storage.setUser(null);
-      }
+      console.warn('Session expired or invalid, prompting login...');
+      Storage.setToken('');
+      Storage.setUser(null);
       this.updateUserDisplay();
+      Modal.openAuthModal();
     }
   },
 

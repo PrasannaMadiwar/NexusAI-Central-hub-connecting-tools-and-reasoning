@@ -193,12 +193,13 @@ const Modal = {
     if (instantDemoLoginBtn) {
       instantDemoLoginBtn.addEventListener('click', async () => {
         try {
-          const res = await API.login('admin@nexusai.com');
+          const res = await API.login('admin@nexusai.com', 'Admin@123');
           Storage.setToken(res.access_token);
           Storage.setUser(res.user);
           App.updateUserDisplay();
           this.toast(`Signed in as Admin (${res.user.email})`, 'success');
           this.authModalEl.classList.remove('open');
+
         } catch (err) {
           this.toast(`Admin login error: ${err.message}`, 'error');
         }
