@@ -1,15 +1,20 @@
 """
-Root entrypoint for NexusAI Streamlit Workspace UI.
-Proxies to modular package: nexusai/ui/app.py
+NexusAI Web Frontend Entrypoint.
+Serves the ChatGPT / Gemini style HTML/CSS/JS frontend directly via FastAPI on http://127.0.0.1:8000
 """
 import sys
-import runpy
+import webbrowser
+import uvicorn
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent.resolve()
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-# Execute modular Streamlit application
-APP_PATH = ROOT_DIR / "nexusai" / "ui" / "app.py"
-runpy.run_path(str(APP_PATH), run_name="__main__")
+if __name__ == "__main__":
+    print("✨ Starting NexusAI ChatGPT / Gemini Web Interface on http://127.0.0.1:8000 ...")
+    try:
+        webbrowser.open("http://127.0.0.1:8000")
+    except Exception:
+        pass
+    uvicorn.run("nexusai.api.server:app", host="127.0.0.1", port=8000, reload=True)

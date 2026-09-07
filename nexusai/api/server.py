@@ -6,8 +6,11 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
+from pathlib import Path
 from fastapi import FastAPI, Depends, HTTPException, Header, status, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from langchain_core.messages import HumanMessage, AIMessage
 
@@ -35,6 +38,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
+
+# Mount ChatGPT / Gemini Style Web UI
+WEB_DIR = Path(__file__).parent.parent / "ui" / "web"
+if WEB_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(WEB_DIR)), name="static")
+
+    @app.get("/", include_in_schema=False)
+    async def serve_index():
+        return FileResponse(str(WEB_DIR / "index.html"))
+
 
 SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
 
@@ -109,9 +124,39 @@ def health_check():
     return {
         "status": "healthy",
         "stack": "FastAPI + SQLAlchemy + PostgreSQL",
+        "database": "Supabase PostgreSQL",
+        "vault": f"MongoDB ({mongo_status})",
         "mongodb": mongo_status,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
+
+
+@app.get("/api/auth/demo-token")
+def get_demo_token(email: str = "developer@nexusai.local"):
+    """
+    Generates a valid JWT for the web client so developers can interact with the
+    full multi-tenant stack immediately.
+    """
+    # Deterministic UUID from email
+    demo_user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, email))
+    payload = {
+        "sub": demo_user_id,
+        "email": email,
+        "role": "authenticated",
+        "iat": int(datetime.now(timezone.utc).timestamp()),
+        "exp": int(datetime.now(timezone.utc).timestamp()) + 86400 * 30
+    }
+    secret = SUPABASE_JWT_SECRET or "nexusai-demo-secret-key"
+    token = jwt.encode(payload, secret, algorithm="HS256")
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": demo_user_id,
+            "email": email
+        }
+    }
+
 
 
 @app.get("/api/user/me")
