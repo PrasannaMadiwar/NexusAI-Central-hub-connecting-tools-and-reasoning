@@ -55,20 +55,13 @@ const App = {
   async checkAuthentication() {
     let token = Storage.getToken();
 
-    // If fresh visit, auto-authenticate seamlessly with demo token
+    // If no session exists, require the user to sign in
     if (!token) {
-      try {
-        const res = await API.getDemoToken('developer@nexusai.local');
-        Storage.setToken(res.access_token);
-        Storage.setUser(res.user);
-        this.updateUserDisplay();
-        return;
-      } catch (e) {
-        console.warn('Could not auto-fetch demo token:', e);
-        this.updateUserDisplay();
-        return;
-      }
+      this.updateUserDisplay();
+      Modal.openAuthModal();
+      return;
     }
+
 
     // Verify existing token
     try {

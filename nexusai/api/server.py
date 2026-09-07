@@ -168,19 +168,24 @@ def signup(req: AuthRequest, db: Session = Depends(get_db)):
 
 @app.post("/api/auth/login")
 def login(req: AuthRequest, db: Session = Depends(get_db)):
-    """User login endpoint returning an authenticated session token without exposing tokens in UI."""
+    """
+    User login endpoint strictly requiring the user to be registered in the database.
+    Rejects unregistered users with 401 Unauthorized.
+    """
     email = req.email.strip().lower()
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Please enter a valid email address.")
 
-    user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, email))
-    user = db.query(User).filter((User.email == email) | (User.id == user_id)).first()
+    user = db.query(User).filter(User.email == email).first()
     if not user:
-        # Create user profile if first time
-        user = User(id=user_id, email=email)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, email))
+        user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access denied: User not registered in the database. Please create an account first."
+        )
 
     payload = {
         "sub": user.id,
@@ -199,6 +204,7 @@ def login(req: AuthRequest, db: Session = Depends(get_db)):
             "email": user.email
         }
     }
+
 
 
 @app.get("/api/auth/demo-token")
