@@ -12,7 +12,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 if __name__ == "__main__":
-    print("✨ Starting NexusAI ChatGPT / Gemini Web Interface on http://127.0.0.1:8000 ...")
+    print("Starting NexusAI ChatGPT / Gemini Web Interface on http://127.0.0.1:8000 ...")
     try:
         webbrowser.open("http://127.0.0.1:8000")
     except Exception:

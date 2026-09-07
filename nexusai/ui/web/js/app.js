@@ -7,7 +7,7 @@ const App = {
   appLayoutEl: null,
 
   async init() {
-    console.log('🚀 Initializing NexusAI Workspace UI...');
+    console.log('Initializing NexusAI Workspace UI...');
     this.authScreenEl = document.getElementById('authScreen');
     this.appLayoutEl = document.getElementById('appLayout');
 

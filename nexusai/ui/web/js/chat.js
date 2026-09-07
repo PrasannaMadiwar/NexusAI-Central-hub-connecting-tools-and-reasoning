@@ -65,19 +65,31 @@ const Chat = {
         
         <div class="prompt-suggestions">
           <div class="suggestion-card" onclick="Chat.applyPrompt('Schedule a 30-min Zoom sync with the product team tomorrow at 3 PM')">
-            <div class="suggestion-title">📅 Schedule Zoom Meeting</div>
+            <div class="suggestion-icon-box">
+              <svg class="ui-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            </div>
+            <div class="suggestion-title">Schedule Zoom Meeting</div>
             <div class="suggestion-desc">Create meetings via Zoom OAuth & Google Calendar</div>
           </div>
           <div class="suggestion-card" onclick="Chat.applyPrompt('Check my unread Gmail emails and summarize any high priority messages')">
-            <div class="suggestion-title">✉️ Summarize Inbox</div>
+            <div class="suggestion-icon-box">
+              <svg class="ui-icon" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </div>
+            <div class="suggestion-title">Summarize Inbox</div>
             <div class="suggestion-desc">Inspect recent Gmail messages and drafts</div>
           </div>
           <div class="suggestion-card" onclick="Chat.applyPrompt('Write and execute a Python script to calculate Fibonacci sequence and plot timings')">
-            <div class="suggestion-title">⚡ Daytona Sandboxed Code</div>
+            <div class="suggestion-icon-box">
+              <svg class="ui-icon" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
+            </div>
+            <div class="suggestion-title">Daytona Sandboxed Code</div>
             <div class="suggestion-desc">Run Python calculations securely in sandbox</div>
           </div>
           <div class="suggestion-card" onclick="Chat.applyPrompt('What tools, credentials, and subagents are currently connected to my workspace?')">
-            <div class="suggestion-title">🔍 Workspace Audit</div>
+            <div class="suggestion-icon-box">
+              <svg class="ui-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+            </div>
+            <div class="suggestion-title">Workspace Audit</div>
             <div class="suggestion-desc">Query MongoDB vault and active subagents</div>
           </div>
         </div>
@@ -98,7 +110,9 @@ const Chat = {
     const loadingRow = document.createElement('div');
     loadingRow.className = 'message-row assistant';
     loadingRow.innerHTML = `
-      <div class="message-avatar">✨</div>
+      <div class="message-avatar">
+        <svg class="ui-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      </div>
       <div class="message-content">
         <div class="reasoning-indicator">
           <div class="thinking-pulse"></div>
@@ -126,7 +140,7 @@ const Chat = {
       this.scrollToBottom();
     } catch (err) {
       this.clearFeed();
-      this.appendAssistantMessage(`⚠️ Could not load history for this chat: ${err.message}`);
+      this.appendAssistantMessage(`Could not load history for this chat: ${err.message}`);
       Modal.toast(`Failed to load chat: ${err.message}`, 'error');
     }
   },
@@ -167,7 +181,7 @@ const Chat = {
         <div class="tool-execution-card">
           <div class="tool-header" onclick="this.nextElementSibling.classList.toggle('hidden')">
             <div class="tool-badge-pill">
-              <span>⚡</span>
+              <svg class="ui-icon ui-icon-sm" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
               <span>${this.escapeHtml(tool.name || 'subagent_execution')}</span>
             </div>
             <span class="tool-status-tag">Success</span>
@@ -183,7 +197,9 @@ const Chat = {
     const formattedBody = this.renderMarkdown(content);
 
     row.innerHTML = `
-      <div class="message-avatar">✨</div>
+      <div class="message-avatar">
+        <svg class="ui-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      </div>
       <div class="message-content">
         <div class="message-author-name">NexusAI Orchestrator</div>
         ${toolsHtml}
@@ -199,7 +215,9 @@ const Chat = {
     row.className = 'message-row assistant thinking-row';
     row.id = 'thinkingRow';
     row.innerHTML = `
-      <div class="message-avatar">✨</div>
+      <div class="message-avatar">
+        <svg class="ui-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      </div>
       <div class="message-content">
         <div class="reasoning-indicator">
           <div class="thinking-pulse"></div>
@@ -261,7 +279,7 @@ const Chat = {
       }
     } catch (err) {
       this.hideThinking();
-      this.appendAssistantMessage(`❌ **Error executing request**: ${err.message}\n\n*Please ensure your database pooler and credentials are configured.*`);
+      this.appendAssistantMessage(`**Execution Error**: ${err.message}\n\n*Please ensure your database pooler and credentials are configured.*`);
       Modal.toast(err.message, 'error');
     } finally {
       this.sendBtnEl.disabled = false;
@@ -287,7 +305,7 @@ const Chat = {
     html = html.replace(/```([a-zA-Z0-9_\-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
       const id = 'code_' + Math.random().toString(36).substring(2, 9);
       return `
-        <pre><div class="code-header"><span>${lang || 'code'}</span><button class="copy-code-btn" onclick="Chat.copyCode('${id}')">📋 Copy</button></div><code id="${id}">${code.trim()}</code></pre>
+        <pre><div class="code-header"><span>${lang || 'code'}</span><button class="copy-code-btn" onclick="Chat.copyCode('${id}')"><svg class="ui-icon ui-icon-sm" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>Copy</span></button></div><code id="${id}">${code.trim()}</code></pre>
       `;
     });
 

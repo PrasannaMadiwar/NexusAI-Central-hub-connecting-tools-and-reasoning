@@ -529,7 +529,9 @@ if not st.session_state.get("user_id"):
     st.markdown(
         """
         <div style="max-width: 520px; margin: 3rem auto; padding: 2.2rem; border-radius: 16px; border: 1px solid #2f2f2f; background: #1a1a1a; text-align: center;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔐</div>
+            <div style="display: flex; justify-content: center; margin-bottom: 0.8rem;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
             <h2 style="margin: 0 0 0.5rem; color: #f8fafc;">NexusAI Sign In</h2>
             <p style="color: #a1a1aa; font-size: 0.9rem; margin-bottom: 1.5rem;">
                 Authenticate with your OAuth2 / Supabase identity to access your private tools, credentials, and conversation threads.
@@ -621,7 +623,7 @@ with st.sidebar:
             st.session_state["chat_thread"] = []
             st.rerun()
 
-    with st.expander("🔑 Tool Credentials & Keys", expanded=False):
+    with st.expander("Tool Credentials & Keys", expanded=False):
         # Display active integrations strictly from MongoDB for this OAuth2 user
         try:
             active_integrations = get_user_integrations(st.session_state["user_id"])
@@ -630,7 +632,7 @@ with st.sidebar:
                 for item in active_integrations:
                     col1, col2 = st.columns([3, 1])
                     col1.text(f"• {item['service']} ({item['auth_type']})")
-                    if col2.button("❌", key=f"del-{item['service']}", help="Remove credential"):
+                    if col2.button("Remove", key=f"del-{item['service']}", help="Remove credential"):
                         remove_user_credential(st.session_state["user_id"], item['service'])
                         st.rerun()
             else:

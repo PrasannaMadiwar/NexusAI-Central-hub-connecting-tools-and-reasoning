@@ -208,11 +208,20 @@ const Modal = {
       listEl.innerHTML = '';
       services.forEach(srv => {
         const found = activeCreds.find(c => c.service === srv);
+        let srvIconSvg = '<svg class="ui-icon ui-icon-md" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>';
+        if (srv === 'zoom' || srv === 'google_meet') {
+          srvIconSvg = '<svg class="ui-icon ui-icon-md" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2" ry="2"/></svg>';
+        } else if (srv === 'google_calendar') {
+          srvIconSvg = '<svg class="ui-icon ui-icon-md" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>';
+        }
+
         const card = document.createElement('div');
         card.className = 'credential-card';
         card.innerHTML = `
           <div class="cred-info">
-            <span style="font-size: 1.2rem;">${srv === 'zoom' ? '📹' : '📧'}</span>
+            <div class="cred-icon-box">
+              ${srvIconSvg}
+            </div>
             <div>
               <div style="font-weight: 600; text-transform: capitalize;">${srv.replace('_', ' ')}</div>
               <div style="font-size: 0.75rem; color: var(--text-muted);">${found ? `Type: ${found.auth_type}` : 'Not configured'}</div>
@@ -222,7 +231,7 @@ const Modal = {
             <span class="cred-badge ${found ? 'connected' : 'missing'}">
               ${found ? 'Encrypted in MongoDB' : 'Missing'}
             </span>
-            ${found ? `<button class="btn-icon" style="color: var(--danger);" title="Delete" onclick="Modal.deleteCred('${srv}')">🗑️</button>` : ''}
+            ${found ? `<button class="btn-icon" style="color: #ffffff;" title="Delete" onclick="Modal.deleteCred('${srv}')"><svg class="ui-icon ui-icon-sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>` : ''}
           </div>
         `;
         listEl.appendChild(card);
@@ -254,11 +263,14 @@ const Modal = {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     
-    let icon = 'ℹ️';
-    if (type === 'success') icon = '✅';
-    if (type === 'error') icon = '⚠️';
+    let iconSvg = '<svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>';
+    if (type === 'success') {
+      iconSvg = '<svg class="ui-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+    } else if (type === 'error') {
+      iconSvg = '<svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>';
+    }
 
-    toast.innerHTML = `<span>${icon}</span><span>${Chat.escapeHtml(message)}</span>`;
+    toast.innerHTML = `<span style="display:inline-flex;align-items:center;">${iconSvg}</span><span>${Chat.escapeHtml(message)}</span>`;
     this.toastContainerEl.appendChild(toast);
 
     setTimeout(() => {

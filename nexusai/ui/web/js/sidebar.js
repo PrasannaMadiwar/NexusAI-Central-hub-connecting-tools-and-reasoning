@@ -117,11 +117,15 @@ const Sidebar = {
 
       item.innerHTML = `
         <div class="thread-main">
-          <span class="thread-icon">💬</span>
+          <span class="thread-icon">
+            <svg class="ui-icon ui-icon-sm" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </span>
           <span class="thread-title-text">${Chat.escapeHtml(t.title || 'Untitled Chat')}</span>
         </div>
         <div class="thread-actions">
-          <button class="thread-delete-btn" title="Delete conversation" onclick="event.stopPropagation(); Sidebar.deleteThread('${t.id}')">✕</button>
+          <button class="thread-delete-btn" title="Delete conversation" onclick="event.stopPropagation(); Sidebar.deleteThread('${t.id}')">
+            <svg class="ui-icon ui-icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
       `;
 

@@ -178,9 +178,14 @@
 }
 
 .thread-icon {
-  font-size: 0.9rem;
-  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.75;
   flex-shrink: 0;
+}
+.thread-icon .ui-icon {
+  stroke: #ffffff;
 }
 
 .thread-title-text {
@@ -201,14 +206,21 @@
 }
 
 .thread-delete-btn {
-  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 5px;
   border-radius: 4px;
-  font-size: 0.75rem;
   color: var(--text-muted);
 }
+.thread-delete-btn .ui-icon {
+  stroke: var(--text-muted);
+}
 .thread-delete-btn:hover {
-  color: var(--danger);
   background: rgba(239, 68, 68, 0.15);
+}
+.thread-delete-btn:hover .ui-icon {
+  stroke: var(--danger);
 }
 
 .threads-empty-state {
