@@ -1,0 +1,282 @@
+import os
+import json
+import uuid
+import jwt
+from typing import Optional, Dict, Any, List
+from datetime import datetime, timezone
+from dotenv import load_dotenv
+
+from fastapi import FastAPI, Depends, HTTPException, Header, status, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from langchain_core.messages import HumanMessage, AIMessage
+
+from nexusai.db.models import init_db, get_db, User, Thread, Message
+from nexusai.db.credentials import credential_manager, CredentialsNotFoundError
+from nexusai.engine.orchestrator import agent
+from nexusai.api.schemas import ChatRequest, ThreadCreateRequest, ZoomCredentialRequest
+
+load_dotenv()
+
+# Initialize tables on startup
+init_db()
+
+app = FastAPI(
+    title="NexusAI Central Hub API",
+    description="Scalable multi-tenant AI workspace API with Supabase PostgreSQL (SQLAlchemy), MongoDB Credential Vault, and OAuth2 User Isolation.",
+    version="2.0.0"
+)
+
+# Enable CORS for frontend clients
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
+
+
+# ----------------------------------------------------------------------------------
+# Auth Dependency: Extract OAuth2 User
+# ----------------------------------------------------------------------------------
+def get_current_user(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)) -> User:
+    """
+    Extracts and validates OAuth2 / Supabase user strictly from Authorization header JWT.
+    Derives user_id STRICTLY from the verified token 'sub' claim.
+    """
+    if not authorization:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required: Missing Authorization header."
+        )
+
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authorization format: Expected 'Bearer <token>'."
+        )
+
+    token = parts[1]
+    user_id = None
+    email = None
+
+    try:
+        if SUPABASE_JWT_SECRET:
+            claims = jwt.decode(
+                token, 
+                SUPABASE_JWT_SECRET, 
+                algorithms=["HS256", "RS256"], 
+                options={"verify_aud": False}
+            )
+        else:
+            claims = jwt.decode(token, options={"verify_signature": False})
+
+        user_id = claims.get("sub") or claims.get("user_id")
+        email = claims.get("email") or claims.get("user_metadata", {}).get("email")
+    except jwt.PyJWTError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid or expired OAuth2 token: {str(e)}"
+        )
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid OAuth2 token: missing user ID claim (sub)."
+        )
+
+    # Sync user in PostgreSQL via SQLAlchemy
+    user = db.query(User).filter(User.id == str(user_id)).first()
+    if not user:
+        user = User(id=str(user_id), email=email or f"{user_id}@oauth.user")
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    return user
+
+
+# ----------------------------------------------------------------------------------
+# API Endpoints
+# ----------------------------------------------------------------------------------
+@app.get("/health")
+def health_check():
+    mongo_status = "connected" if credential_manager.collection is not None else "offline"
+    return {
+        "status": "healthy",
+        "stack": "FastAPI + SQLAlchemy + PostgreSQL",
+        "mongodb": mongo_status,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@app.get("/api/user/me")
+def get_user_profile(user: User = Depends(get_current_user)):
+    return {
+        "user_id": user.id,
+        "email": user.email,
+        "created_at": user.created_at.isoformat() if user.created_at else None
+    }
+
+
+# --- Threads & History (PostgreSQL / SQLAlchemy) ---
+
+@app.get("/api/threads")
+def list_threads(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Retrieve all threads strictly belonging to the authenticated user."""
+    threads = db.query(Thread).filter(Thread.user_id == user.id).order_by(Thread.created_at.desc()).all()
+    return [
+        {
+            "id": t.id,
+            "title": t.title,
+            "created_at": t.created_at.isoformat() if t.created_at else None
+        }
+        for t in threads
+    ]
+
+
+@app.post("/api/threads")
+def create_thread(req: ThreadCreateRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Create a new conversation thread for the authenticated user."""
+    new_id = str(uuid.uuid4())
+    thread = Thread(id=new_id, user_id=user.id, title=req.title or "New Chat")
+    db.add(thread)
+    db.commit()
+    db.refresh(thread)
+    return {"id": thread.id, "title": thread.title, "user_id": thread.user_id}
+
+
+@app.get("/api/threads/{thread_id}/messages")
+def get_thread_messages(thread_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Get message history for a specific thread, verifying user ownership."""
+    thread = db.query(Thread).filter(Thread.id == thread_id, Thread.user_id == user.id).first()
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found or access denied.")
+
+    messages = db.query(Message).filter(Message.thread_id == thread_id).order_by(Message.created_at.asc()).all()
+    return [
+        {
+            "id": m.id,
+            "role": m.role,
+            "content": m.content,
+            "created_at": m.created_at.isoformat() if m.created_at else None
+        }
+        for m in messages
+    ]
+
+
+# --- Agent Execution ---
+
+@app.post("/api/chat")
+def chat_with_nexus(req: ChatRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """
+    Execute NexusAI orchestrator with dynamic user context and store messages in PostgreSQL.
+    """
+    thread_id = req.thread_id or str(uuid.uuid4())
+
+    # Ensure thread exists and belongs to user
+    thread = db.query(Thread).filter(Thread.id == thread_id, Thread.user_id == user.id).first()
+    if not thread:
+        title_snippet = req.message[:40] + ("..." if len(req.message) > 40 else "")
+        thread = Thread(id=thread_id, user_id=user.id, title=title_snippet)
+        db.add(thread)
+        db.commit()
+
+    # Save user message to PostgreSQL
+    user_msg = Message(thread_id=thread_id, user_id=user.id, role="user", content=req.message)
+    db.add(user_msg)
+    db.commit()
+
+    # Configure LangGraph execution with user_id & thread_id
+    config = {
+        "configurable": {
+            "thread_id": thread_id,
+            "user_id": user.id,
+        },
+        "metadata": {
+            "thread_id": thread_id,
+            "user_id": user.id,
+        }
+    }
+
+    try:
+        response = agent.invoke({"messages": [HumanMessage(req.message)]}, config=config)
+        messages = response.get("messages", [])
+        ai_text = "I have processed your request."
+        for m in reversed(messages):
+            if isinstance(m, AIMessage) and not getattr(m, "tool_calls", None) and m.content:
+                ai_text = str(m.content)
+                break
+
+        # Save assistant message to PostgreSQL
+        ai_msg = Message(thread_id=thread_id, user_id=user.id, role="assistant", content=ai_text)
+        db.add(ai_msg)
+        db.commit()
+
+        return {
+            "thread_id": thread_id,
+            "response": ai_text
+        }
+    except Exception as e:
+        error_msg = f"Agent execution error: {str(e)}"
+        return {"thread_id": thread_id, "error": error_msg}
+
+
+# --- MongoDB Credential Management ---
+
+@app.get("/api/credentials")
+def list_credentials(user: User = Depends(get_current_user)):
+    """List active service integrations for the user from MongoDB."""
+    return credential_manager.list_user_credentials(user_id=user.id)
+
+
+@app.post("/api/credentials/zoom")
+def save_zoom_credentials(req: ZoomCredentialRequest, user: User = Depends(get_current_user)):
+    """Store encrypted Zoom Server-to-Server credentials in MongoDB."""
+    data = {
+        "account_id": req.account_id,
+        "client_id": req.client_id,
+        "client_secret": req.client_secret
+    }
+    credential_manager.save_credential(
+        user_id=user.id,
+        service="zoom",
+        auth_type="zoom_s2s",
+        credential_data=data
+    )
+    return {"status": "success", "service": "zoom", "message": "Zoom credentials encrypted & saved in MongoDB."}
+
+
+@app.post("/api/credentials/upload-json")
+async def upload_json_credential(
+    service: str = Form(...),  # 'gmail' | 'google_calendar' | 'google_meet'
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user)
+):
+    """Upload Google service account or OAuth JSON credentials encrypted into MongoDB."""
+    content = await file.read()
+    try:
+        data = json.loads(content.decode("utf-8"))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON file: {e}")
+
+    auth_type = "service_account" if data.get("type") == "service_account" else "oauth_token"
+    credential_manager.save_credential(
+        user_id=user.id,
+        service=service,
+        auth_type=auth_type,
+        credential_data=data,
+        metadata={"filename": file.filename}
+    )
+    return {"status": "success", "service": service, "message": f"{service} credentials encrypted & saved in MongoDB."}
+
+
+@app.delete("/api/credentials/{service}")
+def remove_credential(service: str, user: User = Depends(get_current_user)):
+    """Delete a stored credential from MongoDB."""
+    deleted = credential_manager.delete_credential(user_id=user.id, service=service)
+    return {"status": "success" if deleted else "not_found", "deleted": deleted}

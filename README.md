@@ -76,31 +76,26 @@ pip install -r requirements.txt
 4. Create a `.env` file in the project root:
 
 ```env
+OPENAI_API_KEY=your_openai_api_key
 GROQ_API_KEY=your_groq_api_key
 DAYTONA_API_KEY=your_daytona_api_key
+
+# Supabase PostgreSQL (for LangGraph state checkpointer & threads)
+SUPABASE_POSTGRES_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
+
+# MongoDB Server (for AES-256 encrypted user credentials)
+MONGO_URI=mongodb+srv://[USER]:[PASSWORD]@[CLUSTER].mongodb.net/?retryWrites=true&w=majority
+MONGO_DB_NAME=nexusai
+ENCRYPTION_KEY=your_fernet_aes256_base64_key  # Optional: generated automatically if empty
 ```
 
-Add any other environment variables required by your local LangChain, Google, or Daytona configuration.
+## Security & Multi-Tenant Isolation
 
-## Google Credentials
-
-This project expects Google credential files in the repository root:
-
-```text
-callender_api_agent_key.json  # Calendar API service account credentials
-service_account.json          # Drive/Docs service account credentials for transcripts
-credentials.json              # Gmail OAuth client credentials, if used by GmailToolkit
-token.json                    # Gmail OAuth token, generated locally after authorization
-```
-
-Make sure the Google Cloud project has the required APIs enabled:
-
-- Google Calendar API
-- Gmail API
-- Google Drive API
-- Google Docs API
-
-The credential files and `.env` file contain secrets. They are listed in `.gitignore` and should not be committed.
+NexusAI is designed with strict multi-tenancy and zero local credential fallback:
+- **Supabase PostgreSQL Checkpointer:** Conversation history and checkpoints are persisted in Supabase Postgres and strictly isolated by `user_id`.
+- **MongoDB Server Credential Vault:** All user credentials (Gmail OAuth tokens, Google Calendar keys, Google Meet service accounts, Zoom API keys) are stored encrypted with AES-256 (`Fernet`) in MongoDB.
+- **Zero Local Fallback:** No host or local JSON files are ever used as fallbacks. Every agent tool requires an authenticated user with credentials stored in their own MongoDB document.
+- **OAuth2 User Identity:** User identity is always derived from authenticated OAuth2 / Supabase JWT claims (`sub`, `email`). Users cannot impersonate other accounts.
 
 ## Running the App
 

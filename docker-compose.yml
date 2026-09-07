@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: nexusai-api
+    command: uvicorn nexusai.api.server:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PORT=8000
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+
+  ui:
+    build: .
+    container_name: nexusai-ui
+    command: streamlit run nexusai/ui/app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    depends_on:
+      - api
+
+  mongodb:
+    image: mongo:7.0
+    container_name: nexusai-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

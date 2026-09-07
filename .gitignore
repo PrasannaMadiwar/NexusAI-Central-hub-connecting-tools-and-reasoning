@@ -1,24 +1,54 @@
 # Python
 __pycache__/
-*.pyc
-
-# Environment
-.env
-venv/
+*.py[cod]
+*$py.class
+*.so
+.Python
 env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Databases
-*.db
-*.db-journal
+# Testing & Caches
+.pytest_cache/
+.coverage
+htmlcov/
 
-# Credentials / Secrets
+# Environment Variables & Secrets (NEVER COMMIT)
+.env
+*.env
+*.env.*
+!.env.example
 credentials.json
 service_account.json
 token.json
 callender_api_agent_key.json
 
+# Local Databases & Logs
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.log
+3.11
+
 # Jupyter
 .ipynb_checkpoints/
+*.ipynb
 
 # OS files
 .DS_Store
