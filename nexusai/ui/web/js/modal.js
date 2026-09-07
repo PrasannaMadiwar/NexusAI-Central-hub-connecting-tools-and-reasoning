@@ -187,24 +187,6 @@ const Modal = {
         }
       });
     }
-
-    // Instant 1-Click Admin Login (using pre-registered admin in DB)
-    const instantDemoLoginBtn = document.getElementById('instantDemoLoginBtn');
-    if (instantDemoLoginBtn) {
-      instantDemoLoginBtn.addEventListener('click', async () => {
-        try {
-          const res = await API.login('admin@nexusai.com', 'Admin@123');
-          Storage.setToken(res.access_token);
-          Storage.setUser(res.user);
-          App.updateUserDisplay();
-          App.showAppLayout();
-          this.toast(`Signed in as Admin (${res.user.email})`, 'success');
-        } catch (err) {
-          this.toast(`Admin login error: ${err.message}`, 'error');
-        }
-      });
-    }
-
   },
 
   async openVaultModal() {
