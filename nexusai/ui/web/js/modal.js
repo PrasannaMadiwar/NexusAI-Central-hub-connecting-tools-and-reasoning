@@ -135,9 +135,28 @@ const Modal = {
       });
     }
 
+    // Google Service select → dynamic hint update
+    const googleServiceSelect = document.getElementById('googleServiceSelect');
+    const googleUploadHint = document.getElementById('googleUploadHint');
+    const hintMap = {
+      'gmail': 'Upload your Gmail OAuth2 token.json file. This is NOT a service account — it must be a user OAuth token.',
+      'google_calendar': 'Upload your Calendar Service Account JSON (originally callender_api_agent_key.json).',
+      'google_meet': 'Upload your Google Drive/Meet Service Account JSON for transcript access.',
+    };
+    if (googleServiceSelect && googleUploadHint) {
+      googleServiceSelect.addEventListener('change', () => {
+        googleUploadHint.textContent = hintMap[googleServiceSelect.value] || '';
+      });
+    }
+
     // Google JSON Upload Submit
     const googleUploadForm = document.getElementById('googleUploadForm');
     if (googleUploadForm) {
+      const displayNames = {
+        'gmail': 'Gmail (token.json)',
+        'google_calendar': 'Google Calendar (Service Account)',
+        'google_meet': 'Google Meet / Drive (Service Account)',
+      };
       googleUploadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const service = document.getElementById('googleServiceSelect').value;
@@ -149,7 +168,8 @@ const Modal = {
 
         try {
           await API.uploadGoogleCredentials(service, fileInput.files[0]);
-          this.toast(`${service} credentials uploaded & encrypted!`, 'success');
+          const name = displayNames[service] || service;
+          this.toast(`${name} credentials uploaded & encrypted!`, 'success');
           this.loadCredentialsStatus();
           googleUploadForm.reset();
         } catch (err) {
@@ -205,6 +225,14 @@ const Modal = {
       const services = ['zoom', 'gmail', 'google_calendar', 'google_meet'];
       const activeCreds = Array.isArray(res) ? res : (res.credentials || []);
 
+      // Map MongoDB service keys to proper display names matching original engine JSON files
+      const serviceDisplayNames = {
+        'zoom': 'Zoom (Server-to-Server OAuth)',
+        'gmail': 'Gmail (token.json — OAuth2)',
+        'google_calendar': 'Google Calendar (callender_api_agent_key.json)',
+        'google_meet': 'Google Meet / Drive (Service Account JSON)',
+      };
+
       listEl.innerHTML = '';
       services.forEach(srv => {
         const found = activeCreds.find(c => c.service === srv);
@@ -215,6 +243,7 @@ const Modal = {
           srvIconSvg = '<svg class="ui-icon ui-icon-md" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>';
         }
 
+        const displayName = serviceDisplayNames[srv] || srv.replace('_', ' ');
         const card = document.createElement('div');
         card.className = 'credential-card';
         card.innerHTML = `
@@ -223,7 +252,7 @@ const Modal = {
               ${srvIconSvg}
             </div>
             <div>
-              <div style="font-weight: 600; text-transform: capitalize;">${srv.replace('_', ' ')}</div>
+              <div style="font-weight: 600;">${displayName}</div>
               <div style="font-size: 0.75rem; color: var(--text-muted);">${found ? `Type: ${found.auth_type}` : 'Not configured'}</div>
             </div>
           </div>
@@ -236,6 +265,7 @@ const Modal = {
         `;
         listEl.appendChild(card);
       });
+
     } catch (err) {
       listEl.innerHTML = `<div style="color: var(--danger); font-size: 0.85rem;">Error loading credentials: ${err.message}</div>`;
     }

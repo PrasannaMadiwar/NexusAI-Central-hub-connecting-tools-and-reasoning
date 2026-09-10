@@ -643,10 +643,10 @@ with st.sidebar:
         st.markdown("---")
         service_to_upload = st.selectbox(
             "Connect service for this account",
-            ["Gmail (token.json)", "Google Calendar (Service Account / Token)", "Google Meet / Drive (Service Account)", "Zoom (Server-to-Server)"]
+            ["Gmail (token.json — OAuth2 Token)", "Google Calendar (callender_api_agent_key.json — Service Account)", "Google Meet / Drive (Service Account JSON)", "Zoom (Server-to-Server OAuth)"]
         )
 
-        if service_to_upload == "Zoom (Server-to-Server)":
+        if "Zoom" in service_to_upload:
             z_account_id = st.text_input("Zoom Account ID", type="password")
             z_client_id = st.text_input("Zoom Client ID")
             z_client_secret = st.text_input("Zoom Client Secret", type="password")

@@ -52,7 +52,8 @@ class CredentialManager:
         try:
             self._client = pymongo.MongoClient(
                 self.mongo_uri,
-                serverSelectionTimeoutMS=3000,
+                serverSelectionTimeoutMS=10000,
+                connectTimeoutMS=10000,
                 tlsCAFile=certifi.where()
             )
             self._client.admin.command('ping')
@@ -169,9 +170,18 @@ class CredentialManager:
     # ----------------------------------------------------------------------------------
     # Dynamic Google & Zoom Service Builders (ZERO Local File Fallbacks)
     # ----------------------------------------------------------------------------------
+    @staticmethod
+    def _clean_cred_info(cred_info: Dict[str, Any]) -> tuple:
+        """Strip internal _auth_type/_metadata keys and return (clean_data, auth_type).
+        Google APIs will error on unknown keys, so we must remove our internal fields."""
+        auth_type = cred_info.pop("_auth_type", None)
+        cred_info.pop("_metadata", None)
+        return cred_info, auth_type
+
     def get_calendar_service(self, user_id: str):
         """
         Builds a Google Calendar API service instance strictly from the user's MongoDB credentials.
+        Original engine file: callender_api_agent_key.json (Service Account)
         """
         if not user_id:
             raise ValueError("user_id must be provided from an authenticated session.")
@@ -188,10 +198,11 @@ class CredentialManager:
         if not cred_info:
             raise CredentialsNotFoundError(
                 f"No Google Calendar credentials found for user '{user_id}'. "
-                "Please connect your Google Calendar account in settings."
+                "Please upload your Calendar Service Account JSON "
+                "(originally callender_api_agent_key.json) or OAuth token in Credentials Vault."
             )
 
-        auth_type = cred_info.get("_auth_type")
+        cred_info, auth_type = self._clean_cred_info(cred_info)
         if auth_type == "service_account":
             creds = service_account.Credentials.from_service_account_info(cred_info, scopes=scopes)
         else:
@@ -202,6 +213,7 @@ class CredentialManager:
     def get_gmail_service(self, user_id: str):
         """
         Builds a Gmail API service instance strictly from the user's MongoDB credentials.
+        Original engine file: token.json (OAuth2 Token — NOT a Service Account)
         """
         if not user_id:
             raise ValueError("user_id must be provided from an authenticated session.")
@@ -223,15 +235,31 @@ class CredentialManager:
         if not cred_info:
             raise CredentialsNotFoundError(
                 f"No Gmail credentials found for user '{user_id}'. "
-                "Please connect your Gmail account in settings."
+                "Please upload your Gmail OAuth2 token.json file in Credentials Vault. "
+                "Note: Gmail requires an OAuth2 token (token.json), NOT a Service Account JSON."
             )
 
-        creds = OAuthCredentials.from_authorized_user_info(cred_info, scopes=scopes)
+        cred_info, auth_type = self._clean_cred_info(cred_info)
+
+        # Gmail API only supports OAuth2 user tokens, NOT service accounts.
+        # If user uploaded a service account JSON for Gmail, reject with clear error.
+        if auth_type == "service_account":
+            raise CredentialsNotFoundError(
+                f"Gmail for user '{user_id}' has a Service Account JSON stored, but Gmail "
+                "requires an OAuth2 token (token.json). Please remove the current credential "
+                "and upload your token.json instead."
+            )
+
+        # Use granted scopes from token.json or default to full Gmail access
+        token_scopes = cred_info.get("scopes") or ["https://mail.google.com/"]
+        creds = OAuthCredentials.from_authorized_user_info(cred_info, scopes=token_scopes)
         return build("gmail", "v1", credentials=creds)
 
     def get_drive_and_docs_services(self, user_id: str):
         """
         Builds Google Drive and Docs API service instances strictly from the user's MongoDB credentials.
+        Used by: Google Meet transcript tools (list_google_meet_transcripts, get_google_meet_transcript)
+        Original engine: Service Account JSON with Drive/Docs readonly scopes
         """
         if not user_id:
             raise ValueError("user_id must be provided from an authenticated session.")
@@ -252,10 +280,11 @@ class CredentialManager:
         if not cred_info:
             raise CredentialsNotFoundError(
                 f"No Google Meet/Drive credentials found for user '{user_id}'. "
-                "Please connect your Google Drive/Meet account in settings."
+                "Please upload your Google Drive/Meet Service Account JSON "
+                "or OAuth token in Credentials Vault."
             )
 
-        auth_type = cred_info.get("_auth_type")
+        cred_info, auth_type = self._clean_cred_info(cred_info)
         if auth_type == "service_account":
             creds = service_account.Credentials.from_service_account_info(cred_info, scopes=scopes)
         else:
@@ -266,6 +295,8 @@ class CredentialManager:
     def get_zoom_access_token(self, user_id: str) -> str:
         """
         Fetches a Zoom OAuth access token strictly using the user's credentials in MongoDB.
+        Original engine: ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET from .env
+        Now stored in MongoDB under service key 'zoom'.
         """
         import requests
 
@@ -276,15 +307,23 @@ class CredentialManager:
         if not cred_info:
             raise CredentialsNotFoundError(
                 f"No Zoom credentials found for user '{user_id}'. "
-                "Please connect your Zoom Server-to-Server or OAuth account in settings."
+                "Please enter your Zoom Server-to-Server OAuth credentials "
+                "(Account ID, Client ID, Client Secret) in the Credentials Vault → Zoom S2S tab."
             )
+
+        # Strip internal keys
+        cred_info.pop("_auth_type", None)
+        cred_info.pop("_metadata", None)
 
         account_id = cred_info.get("account_id")
         client_id = cred_info.get("client_id")
         client_secret = cred_info.get("client_secret")
 
         if not account_id or not client_id or not client_secret:
-            raise ValueError("Incomplete Zoom credentials. Required: account_id, client_id, client_secret.")
+            raise ValueError(
+                "Incomplete Zoom credentials. Required fields: account_id, client_id, client_secret. "
+                "Please re-enter your Zoom S2S credentials in Credentials Vault."
+            )
 
         auth_header = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
         token_url = f"https://zoom.us/oauth/token?grant_type=account_credentials&account_id={account_id}"
