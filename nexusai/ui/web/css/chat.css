@@ -36,28 +36,28 @@
   gap: 8px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
-  padding: 6px 12px;
+  padding: 5px 14px;
   border-radius: var(--radius-full);
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-primary);
 }
 
-.model-badge {
-  font-size: 0.7rem;
-  background: #ffffff;
-  color: #000000;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  font-weight: 700;
-  text-transform: uppercase;
+.model-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .thread-current-title {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  max-width: 320px;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  max-width: 340px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -456,15 +456,7 @@
 .input-controls {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.input-tools-hints {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
+  justify-content: flex-end;
 }
 
 .send-btn {

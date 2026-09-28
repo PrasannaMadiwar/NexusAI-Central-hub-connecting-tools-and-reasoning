@@ -167,20 +167,39 @@
 }
 
 /* Active Credentials List */
+.cred-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cred-section-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
 .credentials-status-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .credential-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
   background: #121215;
   border: 1px solid var(--border-subtle);
+  transition: border-color var(--transition-fast);
+}
+
+.credential-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .cred-info {

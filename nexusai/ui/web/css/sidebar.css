@@ -123,13 +123,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px 6px 16px;
+  padding: 12px 16px 6px 16px;
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
-  border-top: 1px solid var(--border-subtle);
 }
 
 .threads-list {

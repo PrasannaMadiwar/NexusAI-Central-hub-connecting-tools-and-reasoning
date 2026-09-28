@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NexusAI — Multi-Tool Reasoning Hub</title>
-  <meta name="description" content="NexusAI central reasoning orchestrator powered by LangGraph, Supabase, and MongoDB Vault.">
+  <title>NexusAI</title>
+  <meta name="description" content="NexusAI intelligent workspace and reasoning assistant.">
 
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -13,22 +13,22 @@
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <!-- CSS Modular Stylesheets with Cache Busting -->
-  <link rel="stylesheet" href="/static/css/main.css?v=9.0">
-  <link rel="stylesheet" href="/static/css/sidebar.css?v=9.0">
-  <link rel="stylesheet" href="/static/css/chat.css?v=9.0">
-  <link rel="stylesheet" href="/static/css/modal.css?v=9.0">
+  <!-- CSS Modular Stylesheets -->
+  <link rel="stylesheet" href="/static/css/main.css?v=10.0">
+  <link rel="stylesheet" href="/static/css/sidebar.css?v=10.0">
+  <link rel="stylesheet" href="/static/css/chat.css?v=10.0">
+  <link rel="stylesheet" href="/static/css/modal.css?v=10.0">
 </head>
 <body>
-  <!-- Full-Screen Authentication Gate: System is strictly hidden until user logs in -->
+  <!-- Authentication Gate -->
   <div class="auth-screen" id="authScreen">
     <div class="auth-card">
       <div class="auth-brand">
         <div class="auth-brand-logo">N</div>
-        <h1 class="auth-brand-title">NexusAI Workspace</h1>
-        <p class="auth-brand-desc">Autonomous multi-tool reasoning hub with encrypted credentials vault</p>
+        <h1 class="auth-brand-title">NexusAI</h1>
+        <p class="auth-brand-desc">Sign in to your account</p>
       </div>
 
       <div class="modal-tabs">
@@ -38,12 +38,12 @@
 
       <form id="authForm" style="display: flex; flex-direction: column; gap: 14px;">
         <div class="form-group">
-          <label class="form-label" for="authEmailInput">Email Address</label>
+          <label class="form-label" for="authEmailInput">Email</label>
           <input 
             type="email" 
             id="authEmailInput" 
             class="form-input" 
-            placeholder="name@company.com" 
+            placeholder="name@example.com" 
             required
             autocomplete="email"
           >
@@ -59,23 +59,17 @@
             minlength="4"
             autocomplete="current-password"
           >
-          <span class="form-hint">Only registered accounts with matching database passwords may enter.</span>
         </div>
-        <button type="submit" class="btn-primary" id="authSubmitBtn" style="width: 100%; justify-content: center; margin-top: 4px;">
+        <button type="submit" class="btn-primary" id="authSubmitBtn" style="width: 100%; justify-content: center; margin-top: 6px;">
           Sign In
         </button>
       </form>
-
-      <div class="auth-security-notice" style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <svg class="ui-icon ui-icon-sm" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span>PBKDF2 Password Hashing • Supabase PostgreSQL • Encrypted MongoDB Vault</span>
-      </div>
     </div>
   </div>
 
-  <!-- Main System Layout: Strictly hidden until authentication is verified -->
+  <!-- Main System Layout -->
   <div class="app-layout" id="appLayout" style="display: none;">
-    <!-- Streamlined Gemini Sidebar (No thread clutter) -->
+    <!-- Streamlined Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <a href="#" class="brand-logo">
@@ -90,36 +84,14 @@
       <div class="sidebar-action-bar">
         <button class="new-chat-btn" id="newChatBtn">
           <svg class="ui-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span>New Session</span>
+          <span>New Chat</span>
         </button>
       </div>
 
-      <!-- Essential Navigation Items -->
-      <nav class="sidebar-nav">
-        <div class="nav-item active" id="navWorkspaceBtn">
-          <span class="nav-icon">
-            <svg class="ui-icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-          </span>
-          <span class="nav-text">Reasoning Workspace</span>
-        </div>
-        <div class="nav-item" id="navVaultBtn">
-          <span class="nav-icon">
-            <svg class="ui-icon" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </span>
-          <span class="nav-text">Credentials Vault</span>
-        </div>
-        <div class="nav-item" id="navAgentsBtn">
-          <span class="nav-icon">
-            <svg class="ui-icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          </span>
-          <span class="nav-text">Specialist Subagents</span>
-        </div>
-      </nav>
-
-      <!-- Recent Chats / Resumable Conversations -->
+      <!-- Recent Chats -->
       <div class="sidebar-section-header">
         <span>Recent Chats</span>
-        <button class="btn-icon" id="refreshThreadsBtn" title="Refresh chats" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+        <button class="btn-icon" id="refreshThreadsBtn" title="Refresh" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
           <svg class="ui-icon ui-icon-sm" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
         </button>
       </div>
@@ -128,20 +100,10 @@
       </div>
 
       <div class="sidebar-footer">
-        <div class="system-status-indicator">
-          <span class="status-badge">
-            <span class="pulsing-dot"></span>
-            <span>System</span>
-          </span>
-          <span id="systemStatusText" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">Online</span>
-        </div>
-
-        <!-- User Profile & Sign Out Bar -->
         <div class="user-profile-bar" id="userProfileBar">
-          <div class="user-avatar" id="userAvatar">D</div>
+          <div class="user-avatar" id="userAvatar">U</div>
           <div class="user-info">
-            <span class="user-name" id="userName">Developer User</span>
-            <span class="user-role" id="userRole">OAuth2 Isolated</span>
+            <span class="user-name" id="userName">User</span>
           </div>
           <button class="btn-signout" id="sidebarSignOutBtn" title="Sign Out">
             <svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
@@ -150,7 +112,7 @@
       </div>
     </aside>
 
-    <!-- Main Chat Container -->
+    <!-- Main Chat Area -->
     <main class="chat-container">
       <header class="chat-header">
         <div class="header-left">
@@ -158,243 +120,151 @@
             <svg class="ui-icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
           <div class="model-selector">
-            <span class="model-badge">DeepAgent</span>
-            <span>NexusAI Orchestrator</span>
+            <span class="model-name">NexusAI</span>
           </div>
           <span class="thread-current-title" id="activeThreadTitle" style="display: none;"></span>
         </div>
-        <div class="header-right" style="display: flex; align-items: center; gap: 10px;">
-          <button class="btn-secondary" id="headerVaultBtn" style="font-size: 0.8rem; padding: 6px 12px;">
+        <div class="header-right">
+          <!-- Single, clean Credentials access point -->
+          <button class="btn-secondary" id="headerVaultBtn">
             <svg class="ui-icon ui-icon-sm" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <span>Credentials</span>
           </button>
-          <button class="btn-secondary btn-auth-toggle" id="headerAuthBtn" style="font-size: 0.8rem; padding: 6px 12px;">
+          <button class="btn-secondary btn-auth-toggle" id="headerAuthBtn">
             <span>Sign Out</span>
           </button>
         </div>
       </header>
 
-      <!-- Message Feed -->
+      <!-- Messages Feed -->
       <section class="messages-feed" id="messagesFeed">
         <div class="messages-inner" id="messagesInner">
-          <!-- Static Pre-Rendered Gemini Welcome Hero -->
+          <!-- Welcome Hero for new session -->
           <div class="welcome-hero" id="welcomeHero">
-            <div class="welcome-gradient-text">Hello, Developer</div>
-            <div class="welcome-subtitle">How can NexusAI assist your workflow today?</div>
+            <div class="welcome-gradient-text">How can I help you today?</div>
             
             <div class="prompt-suggestions">
               <div class="suggestion-card" onclick="Chat.applyPrompt('Schedule a 30-min Zoom sync with the product team tomorrow at 3 PM')">
-                <div class="suggestion-icon-box">
-                  <svg class="ui-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                </div>
                 <div class="suggestion-title">Schedule Zoom Meeting</div>
-                <div class="suggestion-desc">Create meetings via Zoom OAuth & Google Calendar</div>
               </div>
-              <div class="suggestion-card" onclick="Chat.applyPrompt('Check my unread Gmail emails and summarize any high priority messages')">
-                <div class="suggestion-icon-box">
-                  <svg class="ui-icon" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                </div>
-                <div class="suggestion-title">Summarize Inbox</div>
-                <div class="suggestion-desc">Inspect recent Gmail messages and drafts</div>
+              <div class="suggestion-card" onclick="Chat.applyPrompt('Check my unread Gmail emails and summarize recent messages')">
+                <div class="suggestion-title">Summarize Gmail Inbox</div>
               </div>
               <div class="suggestion-card" onclick="Chat.applyPrompt('Write and execute a Python script to calculate Fibonacci sequence and plot timings')">
-                <div class="suggestion-icon-box">
-                  <svg class="ui-icon" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
-                </div>
-                <div class="suggestion-title">Daytona Sandboxed Code</div>
-                <div class="suggestion-desc">Run Python calculations securely in sandbox</div>
+                <div class="suggestion-title">Execute Python Code</div>
               </div>
-              <div class="suggestion-card" onclick="Chat.applyPrompt('What tools, credentials, and subagents are currently connected to my workspace?')">
-                <div class="suggestion-icon-box">
-                  <svg class="ui-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
-                </div>
-                <div class="suggestion-title">Workspace Audit</div>
-                <div class="suggestion-desc">Query MongoDB vault and active subagents</div>
+              <div class="suggestion-card" onclick="Chat.applyPrompt('What tools and integrations are currently connected?')">
+                <div class="suggestion-title">Check Integrations</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Bottom Floating Input -->
+      <!-- Chat Input Area -->
       <footer class="chat-input-wrapper">
         <div class="input-box-container">
           <textarea
             id="chatInput"
             class="input-textarea"
             rows="1"
-            placeholder="Ask NexusAI to schedule meetings, read emails, execute code in sandbox..."
+            placeholder="Message NexusAI..."
           ></textarea>
           <div class="input-controls">
-            <div class="input-tools-hints">
-              <svg class="ui-icon ui-icon-sm" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              <span>Tools: Gmail, Calendar, Meet, Zoom, Daytona Sandbox</span>
-            </div>
+            <div></div>
             <button class="send-btn" id="sendBtn" disabled title="Send message">
               <svg class="ui-icon" viewBox="0 0 24 24"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
           </div>
         </div>
         <div class="input-disclaimer">
-          NexusAI executes reasoning workflows with strict multi-tenant isolation across PostgreSQL and encrypted MongoDB credentials.
+          NexusAI can make mistakes. Verify important information.
         </div>
       </footer>
     </main>
   </div>
 
-  <!-- Credentials Vault Modal -->
+  <!-- Single, Unified Credentials Modal -->
   <div class="modal-overlay" id="vaultModal">
     <div class="modal-card">
       <div class="modal-header">
         <div class="modal-title">
           <svg class="ui-icon ui-icon-md" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <span>Encrypted MongoDB Credentials Vault</span>
+          <span>Credentials</span>
         </div>
-        <button class="btn-icon" data-close-modal>
+        <button class="btn-icon" data-close-modal title="Close">
           <svg class="ui-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <div class="modal-body">
-        <div class="modal-tabs">
-          <button class="modal-tab-btn active" data-tab="status">Connected Accounts</button>
-          <button class="modal-tab-btn" data-tab="zoom">Zoom S2S</button>
-          <button class="modal-tab-btn" data-tab="google">Google Workspace</button>
-        </div>
 
-        <!-- Tab 1: Status -->
-        <div class="tab-pane" data-pane="status" style="display: flex; flex-direction: column; gap: 12px;">
-          <p style="font-size: 0.85rem; color: var(--text-secondary);">
-            Credentials are encrypted with AES-256 Fernet keys in MongoDB and strictly isolated to your user ID.
-          </p>
+      <div class="modal-body">
+        <!-- Active Integrations Status -->
+        <div class="cred-section">
+          <div class="cred-section-title">Connected Services</div>
           <div class="credentials-status-list" id="credentialsStatusList">
-            <!-- Populated dynamically -->
+            <!-- Populated dynamically via Modal.loadCredentialsStatus() -->
           </div>
         </div>
 
-        <!-- Tab 2: Zoom S2S -->
-        <div class="tab-pane" data-pane="zoom" style="display: none; flex-direction: column; gap: 14px;">
-          <form id="zoomForm" style="display: flex; flex-direction: column; gap: 14px;">
+        <!-- Single Unified Setup Form -->
+        <div class="cred-section" style="border-top: 1px solid var(--border-subtle); padding-top: 18px;">
+          <div class="cred-section-title">Add / Update Credential</div>
+          
+          <form id="unifiedCredForm" style="display: flex; flex-direction: column; gap: 14px;">
             <div class="form-group">
-              <label class="form-label" for="zoomAccountId">Account ID</label>
-              <input type="text" id="zoomAccountId" class="form-input" placeholder="e.g. abcd1234efgh" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="zoomClientId">Client ID</label>
-              <input type="text" id="zoomClientId" class="form-input" placeholder="Zoom App Client ID" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="zoomClientSecret">Client Secret</label>
-              <input type="password" id="zoomClientSecret" class="form-input" placeholder="••••••••••••••••" required>
-            </div>
-            <button type="submit" class="btn-primary" style="margin-top: 8px;">Save Zoom Credentials</button>
-          </form>
-        </div>
-
-        <!-- Tab 3: Google JSON -->
-        <div class="tab-pane" data-pane="google" style="display: none; flex-direction: column; gap: 14px;">
-          <form id="googleUploadForm" style="display: flex; flex-direction: column; gap: 14px;">
-            <div class="form-group">
-              <label class="form-label" for="googleServiceSelect">Select Google Service</label>
-              <select id="googleServiceSelect" class="form-select">
-                <option value="gmail">Gmail — upload token.json (OAuth2 Token)</option>
-                <option value="google_calendar">Google Calendar — upload Service Account JSON (callender_api_agent_key.json)</option>
-                <option value="google_meet">Google Meet / Drive — upload Service Account JSON</option>
+              <label class="form-label" for="unifiedServiceSelect">Service</label>
+              <select id="unifiedServiceSelect" class="form-select">
+                <option value="gmail">Gmail (token.json — OAuth2)</option>
+                <option value="google_calendar">Google Calendar (callender_api_agent_key.json)</option>
+                <option value="google_meet">Google Meet / Drive (Service Account JSON)</option>
+                <option value="zoom">Zoom (Server-to-Server OAuth)</option>
               </select>
             </div>
-            <div class="form-group">
-              <label class="form-label">Service Account / OAuth Token JSON</label>
-              <input type="file" id="googleJsonFile" accept=".json" class="form-input" required>
-              <span class="form-hint" id="googleUploadHint">Gmail: Upload your OAuth2 token.json file. Calendar: Upload callender_api_agent_key.json (Service Account). Meet/Drive: Upload Service Account JSON.</span>
+
+            <!-- Google File Upload Area (default) -->
+            <div id="googleCredFields" class="form-group">
+              <label class="form-label" for="googleJsonFile">JSON Credential File</label>
+              <input type="file" id="googleJsonFile" accept=".json" class="form-input">
             </div>
-            <button type="submit" class="btn-primary" style="margin-top: 8px;">Upload &amp; Encrypt</button>
+
+            <!-- Zoom S2S Form Area (shown when Zoom selected) -->
+            <div id="zoomCredFields" style="display: none; flex-direction: column; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label" for="zoomAccountId">Account ID</label>
+                <input type="text" id="zoomAccountId" class="form-input" placeholder="Zoom Account ID">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="zoomClientId">Client ID</label>
+                <input type="text" id="zoomClientId" class="form-input" placeholder="Zoom Client ID">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="zoomClientSecret">Client Secret</label>
+                <input type="password" id="zoomClientSecret" class="form-input" placeholder="Zoom Client Secret">
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary" style="margin-top: 6px; justify-content: center;">
+              Save Credential
+            </button>
           </form>
         </div>
       </div>
+
       <div class="modal-footer">
         <button class="btn-secondary" data-close-modal>Close</button>
       </div>
     </div>
   </div>
 
-  <!-- Specialist Agents Modal -->
-  <div class="modal-overlay" id="agentsModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <div class="modal-title">
-          <svg class="ui-icon ui-icon-md" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          <span>Connected Specialist Subagents</span>
-        </div>
-        <button class="btn-icon" data-close-modal>
-          <svg class="ui-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <div class="credential-card">
-            <div class="cred-info">
-              <div class="cred-icon-box">
-                <svg class="ui-icon ui-icon-md" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-              </div>
-              <div>
-                <div style="font-weight: 600;">Gmail Specialist</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">Searches inbox, summarizes messages, drafts replies</div>
-              </div>
-            </div>
-            <span class="cred-badge connected">Active</span>
-          </div>
-          <div class="credential-card">
-            <div class="cred-info">
-              <div class="cred-icon-box">
-                <svg class="ui-icon ui-icon-md" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-              </div>
-              <div>
-                <div style="font-weight: 600;">Google Calendar Specialist</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">Schedules meetings, fetches availability, creates events</div>
-              </div>
-            </div>
-            <span class="cred-badge connected">Active</span>
-          </div>
-          <div class="credential-card">
-            <div class="cred-info">
-              <div class="cred-icon-box">
-                <svg class="ui-icon ui-icon-md" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2" ry="2"/></svg>
-              </div>
-              <div>
-                <div style="font-weight: 600;">Meet & Zoom Analyzer</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">Inspects transcripts, retrieves summaries, generates action items</div>
-              </div>
-            </div>
-            <span class="cred-badge connected">Active</span>
-          </div>
-          <div class="credential-card">
-            <div class="cred-info">
-              <div class="cred-icon-box">
-                <svg class="ui-icon ui-icon-md" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
-              </div>
-              <div>
-                <div style="font-weight: 600;">Daytona Code Sandbox</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">Executes Python code and data calculations securely</div>
-              </div>
-            </div>
-            <span class="cred-badge connected">Active</span>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" data-close-modal>Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Alerts Container -->
+  <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- App Scripts (Strictly modular with Cache Busting) -->
-  <script src="/static/js/config.js?v=9.0"></script>
-  <script src="/static/js/api.js?v=9.0"></script>
-  <script src="/static/js/modal.js?v=9.0"></script>
-  <script src="/static/js/sidebar.js?v=9.0"></script>
-  <script src="/static/js/chat.js?v=9.0"></script>
-  <script src="/static/js/app.js?v=9.0"></script>
+  <!-- Scripts -->
+  <script src="/static/js/config.js?v=10.0"></script>
+  <script src="/static/js/api.js?v=10.0"></script>
+  <script src="/static/js/sidebar.js?v=10.0"></script>
+  <script src="/static/js/chat.js?v=10.0"></script>
+  <script src="/static/js/modal.js?v=10.0"></script>
+  <script src="/static/js/app.js?v=10.0"></script>
 </body>
 </html>

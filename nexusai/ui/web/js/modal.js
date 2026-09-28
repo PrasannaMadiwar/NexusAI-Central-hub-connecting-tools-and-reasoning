@@ -1,58 +1,38 @@
 /**
- * NexusAI Web UI - Modals (Credentials Vault, Auth / Login / Signup, Agents) & Toasts
+ * NexusAI Web UI - Modals (Single Unified Credentials, Auth Gate) & Toasts
  */
 
 const Modal = {
   vaultModalEl: null,
-  authModalEl: null,
-  agentsModalEl: null,
   toastContainerEl: null,
   authMode: 'signin', // 'signin' | 'signup'
 
   init() {
     this.vaultModalEl = document.getElementById('vaultModal');
-    this.authModalEl = document.getElementById('authModal');
-    this.agentsModalEl = document.getElementById('agentsModal');
     this.toastContainerEl = document.getElementById('toastContainer');
-
     this.bindEvents();
   },
 
   bindEvents() {
-    // Open Credentials Modal
-    const openVaultBtn = document.getElementById('openVaultBtn');
-    if (openVaultBtn) {
-      openVaultBtn.addEventListener('click', () => this.openVaultModal());
-    }
+    // Single Credentials entry point
     const headerVaultBtn = document.getElementById('headerVaultBtn');
     if (headerVaultBtn) {
       headerVaultBtn.addEventListener('click', () => this.openVaultModal());
     }
-    const navVaultBtn = document.getElementById('navVaultBtn');
-    if (navVaultBtn) {
-      navVaultBtn.addEventListener('click', () => this.openVaultModal());
-    }
 
-    // Open Agents Modal
-    const navAgentsBtn = document.getElementById('navAgentsBtn');
-    if (navAgentsBtn) {
-      navAgentsBtn.addEventListener('click', () => {
-        if (this.agentsModalEl) this.agentsModalEl.classList.add('open');
-      });
-    }
-
-    // Open Auth Modal via Header or Profile
+    // Header Auth / Sign Out button
     const headerAuthBtn = document.getElementById('headerAuthBtn');
     if (headerAuthBtn) {
       headerAuthBtn.addEventListener('click', () => {
         if (Storage.getToken()) {
           App.signOut();
         } else {
-          this.openAuthModal();
+          App.showAuthScreen();
         }
       });
     }
 
+    // Sidebar Sign Out button
     const sidebarSignOutBtn = document.getElementById('sidebarSignOutBtn');
     if (sidebarSignOutBtn) {
       sidebarSignOutBtn.addEventListener('click', (e) => {
@@ -78,24 +58,69 @@ const Modal = {
       });
     });
 
-    // Credentials Modal tabs switching
-    this.vaultModalEl.querySelectorAll('.modal-tab-btn').forEach(tabBtn => {
-      tabBtn.addEventListener('click', () => {
-        const targetTab = tabBtn.dataset.tab;
-        this.vaultModalEl.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
-        this.vaultModalEl.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+    // Service dropdown toggle in Unified Credentials Form
+    const serviceSelect = document.getElementById('unifiedServiceSelect');
+    const googleFields = document.getElementById('googleCredFields');
+    const zoomFields = document.getElementById('zoomCredFields');
 
-        tabBtn.classList.add('active');
-        const activePane = this.vaultModalEl.querySelector(`.tab-pane[data-pane="${targetTab}"]`);
-        if (activePane) activePane.style.display = 'flex';
+    if (serviceSelect) {
+      serviceSelect.addEventListener('change', () => {
+        const isZoom = serviceSelect.value === 'zoom';
+        if (googleFields) googleFields.style.display = isZoom ? 'none' : 'flex';
+        if (zoomFields) zoomFields.style.display = isZoom ? 'flex' : 'none';
       });
-    });
+    }
 
-    // Auth Modal tab switching (Sign In vs Create Account)
+    // Unified Credentials Form Submit
+    const unifiedCredForm = document.getElementById('unifiedCredForm');
+    if (unifiedCredForm) {
+      unifiedCredForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const service = serviceSelect ? serviceSelect.value : 'gmail';
+
+        if (service === 'zoom') {
+          const accountId = (document.getElementById('zoomAccountId')?.value || '').trim();
+          const clientId = (document.getElementById('zoomClientId')?.value || '').trim();
+          const clientSecret = (document.getElementById('zoomClientSecret')?.value || '').trim();
+
+          if (!accountId || !clientId || !clientSecret) {
+            this.toast('Please fill in all Zoom credentials.', 'error');
+            return;
+          }
+
+          try {
+            await API.saveZoomCredentials(accountId, clientId, clientSecret);
+            this.toast('Zoom credentials saved.', 'success');
+            document.getElementById('zoomAccountId').value = '';
+            document.getElementById('zoomClientId').value = '';
+            document.getElementById('zoomClientSecret').value = '';
+            this.loadCredentialsStatus();
+          } catch (err) {
+            this.toast(`Failed to save Zoom credentials: ${err.message}`, 'error');
+          }
+        } else {
+          const fileInput = document.getElementById('googleJsonFile');
+          if (!fileInput.files || fileInput.files.length === 0) {
+            this.toast('Please select a JSON credential file.', 'error');
+            return;
+          }
+
+          try {
+            await API.uploadGoogleCredentials(service, fileInput.files[0]);
+            this.toast('Credentials uploaded successfully.', 'success');
+            fileInput.value = '';
+            this.loadCredentialsStatus();
+          } catch (err) {
+            this.toast(`Upload failed: ${err.message}`, 'error');
+          }
+        }
+      });
+    }
+
+    // Auth Screen Tabs (Sign In vs Create Account)
     const tabSignInBtn = document.getElementById('tabSignInBtn');
     const tabSignUpBtn = document.getElementById('tabSignUpBtn');
     const authSubmitBtn = document.getElementById('authSubmitBtn');
-    const authModalTitle = document.getElementById('authModalTitle');
 
     if (tabSignInBtn && tabSignUpBtn) {
       tabSignInBtn.addEventListener('click', () => {
@@ -103,7 +128,6 @@ const Modal = {
         tabSignInBtn.classList.add('active');
         tabSignUpBtn.classList.remove('active');
         if (authSubmitBtn) authSubmitBtn.textContent = 'Sign In';
-        if (authModalTitle) authModalTitle.textContent = 'Sign In to NexusAI';
       });
 
       tabSignUpBtn.addEventListener('click', () => {
@@ -111,74 +135,10 @@ const Modal = {
         tabSignUpBtn.classList.add('active');
         tabSignInBtn.classList.remove('active');
         if (authSubmitBtn) authSubmitBtn.textContent = 'Create Account';
-        if (authModalTitle) authModalTitle.textContent = 'Create NexusAI Account';
       });
     }
 
-    // Zoom Form Submit
-    const zoomForm = document.getElementById('zoomForm');
-    if (zoomForm) {
-      zoomForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const accountId = document.getElementById('zoomAccountId').value.trim();
-        const clientId = document.getElementById('zoomClientId').value.trim();
-        const clientSecret = document.getElementById('zoomClientSecret').value.trim();
-
-        try {
-          await API.saveZoomCredentials(accountId, clientId, clientSecret);
-          this.toast('Zoom Server-to-Server OAuth saved & encrypted in MongoDB!', 'success');
-          this.loadCredentialsStatus();
-          zoomForm.reset();
-        } catch (err) {
-          this.toast(`Failed to save Zoom: ${err.message}`, 'error');
-        }
-      });
-    }
-
-    // Google Service select → dynamic hint update
-    const googleServiceSelect = document.getElementById('googleServiceSelect');
-    const googleUploadHint = document.getElementById('googleUploadHint');
-    const hintMap = {
-      'gmail': 'Upload your Gmail OAuth2 token.json file. This is NOT a service account — it must be a user OAuth token.',
-      'google_calendar': 'Upload your Calendar Service Account JSON (originally callender_api_agent_key.json).',
-      'google_meet': 'Upload your Google Drive/Meet Service Account JSON for transcript access.',
-    };
-    if (googleServiceSelect && googleUploadHint) {
-      googleServiceSelect.addEventListener('change', () => {
-        googleUploadHint.textContent = hintMap[googleServiceSelect.value] || '';
-      });
-    }
-
-    // Google JSON Upload Submit
-    const googleUploadForm = document.getElementById('googleUploadForm');
-    if (googleUploadForm) {
-      const displayNames = {
-        'gmail': 'Gmail (token.json)',
-        'google_calendar': 'Google Calendar (Service Account)',
-        'google_meet': 'Google Meet / Drive (Service Account)',
-      };
-      googleUploadForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const service = document.getElementById('googleServiceSelect').value;
-        const fileInput = document.getElementById('googleJsonFile');
-        if (!fileInput.files || fileInput.files.length === 0) {
-          this.toast('Please select a Google Service Account / OAuth JSON file.', 'error');
-          return;
-        }
-
-        try {
-          await API.uploadGoogleCredentials(service, fileInput.files[0]);
-          const name = displayNames[service] || service;
-          this.toast(`${name} credentials uploaded & encrypted!`, 'success');
-          this.loadCredentialsStatus();
-          googleUploadForm.reset();
-        } catch (err) {
-          this.toast(`Failed to upload JSON: ${err.message}`, 'error');
-        }
-      });
-    }
-
-    // Auth Form Submit (Email & Password Login / Signup)
+    // Auth Form Submit
     const authForm = document.getElementById('authForm');
     if (authForm) {
       authForm.addEventListener('submit', async (e) => {
@@ -194,7 +154,7 @@ const Modal = {
             this.toast(`Account created for ${res.user.email}!`, 'success');
           } else {
             res = await API.login(email, password);
-            this.toast(`Signed in as ${res.user.email}!`, 'success');
+            this.toast(`Welcome back!`, 'success');
           }
 
           Storage.setToken(res.access_token);
@@ -210,27 +170,28 @@ const Modal = {
   },
 
   async openVaultModal() {
-    this.vaultModalEl.classList.add('open');
-    await this.loadCredentialsStatus();
+    if (this.vaultModalEl) {
+      this.vaultModalEl.classList.add('open');
+      await this.loadCredentialsStatus();
+    }
   },
 
   async loadCredentialsStatus() {
     const listEl = document.getElementById('credentialsStatusList');
     if (!listEl) return;
 
-    listEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">Loading stored credentials...</div>';
+    listEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">Loading...</div>';
 
     try {
       const res = await API.listCredentials();
-      const services = ['zoom', 'gmail', 'google_calendar', 'google_meet'];
+      const services = ['gmail', 'google_calendar', 'google_meet', 'zoom'];
       const activeCreds = Array.isArray(res) ? res : (res.credentials || []);
 
-      // Map MongoDB service keys to proper display names matching original engine JSON files
       const serviceDisplayNames = {
-        'zoom': 'Zoom (Server-to-Server OAuth)',
-        'gmail': 'Gmail (token.json — OAuth2)',
-        'google_calendar': 'Google Calendar (callender_api_agent_key.json)',
-        'google_meet': 'Google Meet / Drive (Service Account JSON)',
+        'gmail': 'Gmail',
+        'google_calendar': 'Google Calendar',
+        'google_meet': 'Google Meet / Drive',
+        'zoom': 'Zoom',
       };
 
       listEl.innerHTML = '';
@@ -243,7 +204,7 @@ const Modal = {
           srvIconSvg = '<svg class="ui-icon ui-icon-md" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>';
         }
 
-        const displayName = serviceDisplayNames[srv] || srv.replace('_', ' ');
+        const displayName = serviceDisplayNames[srv] || srv;
         const card = document.createElement('div');
         card.className = 'credential-card';
         card.innerHTML = `
@@ -251,16 +212,13 @@ const Modal = {
             <div class="cred-icon-box">
               ${srvIconSvg}
             </div>
-            <div>
-              <div style="font-weight: 600;">${displayName}</div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">${found ? `Type: ${found.auth_type}` : 'Not configured'}</div>
-            </div>
+            <div style="font-weight: 500; font-size: 0.9rem;">${displayName}</div>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="cred-badge ${found ? 'connected' : 'missing'}">
-              ${found ? 'Encrypted in MongoDB' : 'Missing'}
+              ${found ? 'Connected' : 'Not configured'}
             </span>
-            ${found ? `<button class="btn-icon" style="color: #ffffff;" title="Delete" onclick="Modal.deleteCred('${srv}')"><svg class="ui-icon ui-icon-sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>` : ''}
+            ${found ? `<button class="btn-icon" style="color: var(--text-muted);" title="Remove" onclick="Modal.deleteCred('${srv}')"><svg class="ui-icon ui-icon-sm" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>` : ''}
           </div>
         `;
         listEl.appendChild(card);
@@ -272,7 +230,7 @@ const Modal = {
   },
 
   async deleteCred(service) {
-    if (!confirm(`Remove encrypted ${service} credentials from MongoDB vault?`)) return;
+    if (!confirm(`Remove ${service} credentials?`)) return;
     try {
       await API.deleteCredential(service);
       this.toast(`${service} credentials removed.`, 'info');
@@ -280,12 +238,6 @@ const Modal = {
     } catch (err) {
       this.toast(err.message, 'error');
     }
-  },
-
-  openAuthModal() {
-    App.showAuthScreen();
-    const emailInput = document.getElementById('authEmailInput');
-    if (emailInput) emailInput.focus();
   },
 
   toast(message, type = 'info') {
@@ -307,6 +259,6 @@ const Modal = {
       toast.style.opacity = '0';
       toast.style.transform = 'translateX(100%)';
       setTimeout(() => toast.remove(), 250);
-    }, 4000);
+    }, 3500);
   }
 };

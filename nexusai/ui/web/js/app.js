@@ -93,17 +93,11 @@ const App = {
   },
 
   async checkSystemHealth() {
-    const statusTextEl = document.getElementById('systemStatusText');
+    // Background health check without cluttering UI
     try {
-      const health = await API.getHealth();
-      if (statusTextEl) {
-        statusTextEl.textContent = `Online • ${health.database} • ${health.vault}`;
-      }
+      await API.getHealth();
     } catch (err) {
-      if (statusTextEl) {
-        statusTextEl.textContent = 'Backend Offline';
-        statusTextEl.style.color = 'var(--danger)';
-      }
+      console.warn('Backend Offline:', err);
     }
   },
 
@@ -140,23 +134,21 @@ const App = {
     Chat.showWelcome();
     this.showAuthScreen();
     Sidebar.loadThreads();
-    Modal.toast('Signed out successfully.', 'info');
+    Modal.toast('Signed out.', 'info');
   },
 
   updateUserDisplay() {
     const user = Storage.getUser();
     const token = Storage.getToken();
     const nameEl = document.getElementById('userName');
-    const roleEl = document.getElementById('userRole');
     const avatarEl = document.getElementById('userAvatar');
     const headerAuthBtn = document.getElementById('headerAuthBtn');
     const sidebarSignOutBtn = document.getElementById('sidebarSignOutBtn');
 
     if (token && user) {
-      if (nameEl) nameEl.textContent = user.email || 'Developer User';
-      if (roleEl) roleEl.textContent = 'OAuth2 Isolated';
+      if (nameEl) nameEl.textContent = user.email || 'User';
       if (avatarEl) {
-        avatarEl.textContent = (user.email || 'D')[0].toUpperCase();
+        avatarEl.textContent = (user.email || 'U')[0].toUpperCase();
       }
       if (headerAuthBtn) {
         headerAuthBtn.textContent = 'Sign Out';
@@ -167,7 +159,6 @@ const App = {
       }
     } else {
       if (nameEl) nameEl.textContent = 'Not Signed In';
-      if (roleEl) roleEl.textContent = 'Guest Session';
       if (avatarEl) avatarEl.textContent = '?';
       if (headerAuthBtn) {
         headerAuthBtn.textContent = 'Sign In';

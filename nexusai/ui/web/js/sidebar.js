@@ -40,32 +40,6 @@ const Sidebar = {
       });
     }
 
-    const navWorkspaceBtn = document.getElementById('navWorkspaceBtn');
-    if (navWorkspaceBtn) {
-      navWorkspaceBtn.addEventListener('click', () => {
-        this.setActiveNav(navWorkspaceBtn);
-      });
-    }
-
-    const navVaultBtn = document.getElementById('navVaultBtn');
-    if (navVaultBtn) {
-      navVaultBtn.addEventListener('click', () => {
-        Modal.openVaultModal();
-      });
-    }
-
-    const navAgentsBtn = document.getElementById('navAgentsBtn');
-    if (navAgentsBtn) {
-      navAgentsBtn.addEventListener('click', () => {
-        const agentsModal = document.getElementById('agentsModal');
-        if (agentsModal) agentsModal.classList.add('open');
-      });
-    }
-  },
-
-  setActiveNav(el) {
-    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-    el.classList.add('active');
   },
 
   toggleSidebar() {

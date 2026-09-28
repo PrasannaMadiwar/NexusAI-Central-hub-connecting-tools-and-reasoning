@@ -60,37 +60,20 @@ const Chat = {
 
     const welcomeHtml = `
       <div class="welcome-hero" id="welcomeHero">
-        <div class="welcome-gradient-text">Hello, Developer</div>
-        <div class="welcome-subtitle">How can NexusAI assist your workflow today?</div>
+        <div class="welcome-gradient-text">How can I help you today?</div>
         
         <div class="prompt-suggestions">
           <div class="suggestion-card" onclick="Chat.applyPrompt('Schedule a 30-min Zoom sync with the product team tomorrow at 3 PM')">
-            <div class="suggestion-icon-box">
-              <svg class="ui-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-            </div>
             <div class="suggestion-title">Schedule Zoom Meeting</div>
-            <div class="suggestion-desc">Create meetings via Zoom OAuth & Google Calendar</div>
           </div>
-          <div class="suggestion-card" onclick="Chat.applyPrompt('Check my unread Gmail emails and summarize any high priority messages')">
-            <div class="suggestion-icon-box">
-              <svg class="ui-icon" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-            </div>
-            <div class="suggestion-title">Summarize Inbox</div>
-            <div class="suggestion-desc">Inspect recent Gmail messages and drafts</div>
+          <div class="suggestion-card" onclick="Chat.applyPrompt('Check my unread Gmail emails and summarize recent messages')">
+            <div class="suggestion-title">Summarize Gmail Inbox</div>
           </div>
           <div class="suggestion-card" onclick="Chat.applyPrompt('Write and execute a Python script to calculate Fibonacci sequence and plot timings')">
-            <div class="suggestion-icon-box">
-              <svg class="ui-icon" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
-            </div>
-            <div class="suggestion-title">Daytona Sandboxed Code</div>
-            <div class="suggestion-desc">Run Python calculations securely in sandbox</div>
+            <div class="suggestion-title">Execute Python Code</div>
           </div>
-          <div class="suggestion-card" onclick="Chat.applyPrompt('What tools, credentials, and subagents are currently connected to my workspace?')">
-            <div class="suggestion-icon-box">
-              <svg class="ui-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
-            </div>
-            <div class="suggestion-title">Workspace Audit</div>
-            <div class="suggestion-desc">Query MongoDB vault and active subagents</div>
+          <div class="suggestion-card" onclick="Chat.applyPrompt('What tools and integrations are currently connected?')">
+            <div class="suggestion-title">Check Integrations</div>
           </div>
         </div>
       </div>
