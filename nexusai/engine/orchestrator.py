@@ -69,7 +69,7 @@ supabase_db_url = os.getenv("SUPABASE_POSTGRES_URL") or os.getenv("DATABASE_URL"
 if supabase_db_url:
     try:
         # Connect to Supabase Postgres pool with prepare_threshold=None for PgBouncer/Transaction mode
-        pool = ConnectionPool(conninfo=supabase_db_url, max_size=5, kwargs={"autocommit": True, "prepare_threshold": None})
+        pool = ConnectionPool(conninfo=supabase_db_url, max_size=3, open=True, kwargs={"autocommit": True, "prepare_threshold": None})
         checkpointer = PostgresSaver(pool)
         checkpointer.setup()
         print("[orchestrator.py] Connected to Supabase PostgreSQL checkpointer successfully.")

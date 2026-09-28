@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: nexusai-hub
+    name: nexusai-backend
     runtime: docker
     plan: free
     region: oregon
