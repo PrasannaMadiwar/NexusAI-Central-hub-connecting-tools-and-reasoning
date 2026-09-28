@@ -21,7 +21,8 @@ const Chat = {
     // Auto-expand input textarea
     this.inputEl.addEventListener('input', () => {
       this.inputEl.style.height = 'auto';
-      this.inputEl.style.height = Math.min(this.inputEl.scrollHeight, 180) + 'px';
+      const scrollH = this.inputEl.scrollHeight;
+      this.inputEl.style.height = Math.min(Math.max(scrollH, 24), 140) + 'px';
       this.sendBtnEl.disabled = !this.inputEl.value.trim();
     });
 
@@ -245,7 +246,7 @@ const Chat = {
 
     const activeThreadId = Storage.getThreadId();
     this.inputEl.value = '';
-    this.inputEl.style.height = 'auto';
+    this.inputEl.style.height = '24px';
     this.sendBtnEl.disabled = true;
 
     this.appendUserMessage(text);
