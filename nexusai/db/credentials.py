@@ -27,6 +27,61 @@ if not ENCRYPTION_KEY:
 fernet = Fernet(ENCRYPTION_KEY.encode())
 
 
+try:
+    from google.oauth2.credentials import Credentials as OAuthCredentials
+except ImportError:
+    OAuthCredentials = object
+
+
+class MongoRefreshingCredentials(OAuthCredentials):
+    """
+    Subclass of google.oauth2.credentials.Credentials that intercepts refresh()
+    and automatically persists the newly acquired access token (and expiration) back
+    to MongoDB encrypted with Fernet.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._user_id = None
+        self._service = None
+        self._cred_manager = None
+
+    def refresh(self, request):
+        super().refresh(request)
+        if self._user_id and self._service and self._cred_manager:
+            try:
+                updated = {
+                    "token": self.token,
+                    "refresh_token": self.refresh_token,
+                    "token_uri": self.token_uri,
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                    "scopes": self.scopes,
+                }
+                if self.expiry:
+                    updated["expiry"] = self.expiry.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+                existing_doc = None
+                if self._cred_manager.collection is not None:
+                    existing_doc = self._cred_manager.collection.find_one({
+                        "user_id": self._user_id,
+                        "service": self._service
+                    })
+
+                auth_type = existing_doc.get("auth_type", "oauth_token") if existing_doc else "oauth_token"
+                metadata = existing_doc.get("metadata", {}) if existing_doc else {}
+                metadata["last_refreshed_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+                self._cred_manager.save_credential(
+                    user_id=self._user_id,
+                    service=self._service,
+                    auth_type=auth_type,
+                    credential_data=updated,
+                    metadata=metadata
+                )
+            except Exception as e:
+                print(f"[MongoRefreshingCredentials] Warning: Failed to persist refreshed token ({e})")
+
+
 class CredentialManager:
     """
     Multi-tenant credential store connected strictly to a MongoDB server cluster.
@@ -206,7 +261,10 @@ class CredentialManager:
         if auth_type == "service_account":
             creds = service_account.Credentials.from_service_account_info(cred_info, scopes=scopes)
         else:
-            creds = OAuthCredentials.from_authorized_user_info(cred_info, scopes=scopes)
+            creds = MongoRefreshingCredentials.from_authorized_user_info(cred_info, scopes=scopes)
+            creds._user_id = user_id
+            creds._service = "google_calendar"
+            creds._cred_manager = self
 
         return build("calendar", "v3", credentials=creds)
 
@@ -252,7 +310,10 @@ class CredentialManager:
 
         # Use granted scopes from token.json or default to full Gmail access
         token_scopes = cred_info.get("scopes") or ["https://mail.google.com/"]
-        creds = OAuthCredentials.from_authorized_user_info(cred_info, scopes=token_scopes)
+        creds = MongoRefreshingCredentials.from_authorized_user_info(cred_info, scopes=token_scopes)
+        creds._user_id = user_id
+        creds._service = "gmail"
+        creds._cred_manager = self
         return build("gmail", "v1", credentials=creds)
 
     def get_drive_and_docs_services(self, user_id: str):
@@ -288,7 +349,10 @@ class CredentialManager:
         if auth_type == "service_account":
             creds = service_account.Credentials.from_service_account_info(cred_info, scopes=scopes)
         else:
-            creds = OAuthCredentials.from_authorized_user_info(cred_info, scopes=scopes)
+            creds = MongoRefreshingCredentials.from_authorized_user_info(cred_info, scopes=scopes)
+            creds._user_id = user_id
+            creds._service = "google_meet"
+            creds._cred_manager = self
 
         return build("drive", "v3", credentials=creds), build("docs", "v1", credentials=creds)
 

@@ -11,8 +11,8 @@ class LazyCodeAgent(Runnable):
     Lazy wrapper for Daytona code execution subagent.
     Prevents eager sandbox creation at import time, allocating sandbox resources on demand.
     """
-    def __init__(self):
-        self._agent = None
+    def __init__(self, agent=None):
+        self._agent = agent
 
     def _init_agent(self):
         if self._agent is not None:
@@ -27,6 +27,7 @@ class LazyCodeAgent(Runnable):
             llm = ChatOpenAI(model="gpt-4o-mini")
             sandbox = Daytona().create()
             backend = DaytonaSandbox(sandbox=sandbox)
+            skills = ["./skills"] if os.path.exists("./skills") else None
 
             self._agent = create_deep_agent(
                 model=llm,
@@ -36,7 +37,7 @@ You are a Python Code Execution SubAgent operating inside a secure Daytona sandb
 Your sole responsibility is to generate, execute, and debug Python code within the sandbox environment.
 """,
                 backend=backend,
-                skills=["./skills"]
+                skills=skills
             )
             return self._agent
         except Exception as e:

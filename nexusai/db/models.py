@@ -8,14 +8,23 @@ load_dotenv()
 
 # Determine database URL: Supabase PostgreSQL, or local SQLite fallback
 SUPABASE_URL = os.getenv("SUPABASE_POSTGRES_URL") or os.getenv("DATABASE_URL")
-if SUPABASE_URL:
-    # Handle postgresql+psycopg schema if necessary
-    DB_URL = SUPABASE_URL.replace("postgresql://", "postgresql+psycopg://")
+if SUPABASE_URL and "sqlite" not in SUPABASE_URL:
+    test_url = SUPABASE_URL.replace("postgresql://", "postgresql+psycopg://")
+    try:
+        # Quick 2-second connectivity check before committing to remote Postgres pool
+        test_engine = create_engine(test_url, connect_args={"connect_timeout": 2}, pool_pre_ping=True)
+        with test_engine.connect() as conn:
+            pass
+        DB_URL = test_url
+        test_engine.dispose()
+    except Exception as e:
+        print(f"[models.py] Warning: Postgres at {SUPABASE_URL[:30]}... unreachable ({e}). Falling back to local SQLite.")
+        DB_URL = "sqlite:///./nexusai.db"
 else:
     DB_URL = "sqlite:///./nexusai.db"
 
 # Create SQLAlchemy engine & session
-connect_args = {"check_same_thread": False} if "sqlite" in DB_URL else {}
+connect_args = {"check_same_thread": False} if "sqlite" in DB_URL else {"connect_timeout": 3}
 engine_kwargs = {"connect_args": connect_args, "pool_pre_ping": True}
 if "sqlite" not in DB_URL:
     engine_kwargs.update({"pool_size": 5, "max_overflow": 5})

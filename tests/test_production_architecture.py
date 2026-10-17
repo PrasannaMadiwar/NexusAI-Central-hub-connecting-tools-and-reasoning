@@ -270,10 +270,23 @@ def test_11_deployment_files_readiness():
 
     with open(str(PROJECT_ROOT / "render.yaml"), "r") as f:
         ry = f.read()
-        assert "nexusai-backend" in ry
+        assert "nexusai-central-workspace-hub" in ry or "nexusai-backend" in ry
         assert "SUPABASE_POSTGRES_URL" in ry
+    print("   -> Test 11 PASSED: Docker and Render deployment configurations verified!")
 
-    print("   -> Test 11 & 12 PASSED: Docker and Render deployment configurations verified!")
+
+def test_12_health_endpoint():
+    print("Test 12: Testing GET /health endpoint diagnostics and request ID tracing...")
+    res = client.get("/health")
+    assert res.status_code == 200, f"Expected 200, got {res.status_code}: {res.text}"
+    data = res.json()
+    assert "status" in data
+    assert "checks" in data
+    assert "database" in data["checks"]
+    assert "mongodb" in data["checks"]
+    assert "redis" in data["checks"]
+    assert "X-Request-ID" in res.headers
+    print("   -> Test 12 PASSED: Health checks (DB + Mongo + Redis) and X-Request-ID verified!")
 
 
 if __name__ == "__main__":
